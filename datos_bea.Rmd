@@ -37,3 +37,35 @@ beaPayload %>%
   mutate(year = str_match(year, pattern = '\\d{4}'))
 ```
 
+Datos relacionados con [NIPA](https://www.econdb.com/dataset/NIPA/standard-national-income-and-product-accounts-tables/#5006=[5612]&26190=[26200]&to=2019-09-01&from=1929-01-01&h=TIME&v=Series%20description)
+
+```{r}
+datos_posibles_NIPA <- bea.R::beaSearch('NIPA',beaKey)
+datos_posibles_NIPA
+```
+
+
+Si queremos por ejemplo los datos de Equipment. Table 1.1.5. Gross Domestic Product
+
+Busco usando filter y me quedo con la columna _apiCall_ que me da el código que necesito
+
+```{r}
+datos_posibles_NIPA %>% 
+  filter(LineDescription=='Equipment', TableName=='Table 1.1.5. Gross Domestic Product') %>% 
+  pull(apiCall)
+```
+
+me copio esa linea, remplazo la beaKey, agrego Frquencym year y ResultFormat
+
+```{r}
+equipment_gdp <- beaGet(list('UserID' = beaKey, 
+                             'Method' = 'GetData',
+                             'DatasetName' = 'NIPA',
+                             'TableName' = 'T10105',
+                             'Frequency' = 'Q',
+                             'Year' = 'X',
+                             'ResultFormat' = 'json'))
+
+equipment_gdp
+```
+
