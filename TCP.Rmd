@@ -1,0 +1,186 @@
+---
+title: "Tipo de Cambio de Paridad"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r message=FALSE, warning=FALSE}
+library(readr)
+library(tidyverse)
+library(stringr)
+library(lubridate)
+```
+
+# Variables de EEUU
+
+## Productividad del Trabajo
+
+#### [Industrial Production: Manufacturing (NAICS)](https://fred.stlouisfed.org/series/IPGMFSQ)
+
+Indice de producción industrial de EEUU
+
+* Fuente: Reserva Federal de Saint Louis
+* Frecuencia: cuatrimestral
+* Periodo: 1972 - 2019
+* Base 2012 = 100
+* Ajustado estacionalmente
+* ID serie: IP.GMF.S
+
+```{r message=FALSE, warning=FALSE}
+base_manuf_us <- read_csv("../../../Archivos/Datos/TCP/Fuentes/IPGMFSQ.csv")
+```
+
+
+#### [Employment, Hours, and Earnings from the Current Employment Statistics survey (National)](https://beta.bls.gov/dataViewer/view/timeseries/CES3000000001;jsessionid=71A78735C5FBF3750FAAF0313CFC1B51)
+
+Total de obreros ocupados del sector industrial. 
+
+* Fuente: BLS
+* Frecuencia: mensual 
+* Periodo: 1939 - 2019
+* Unidad: miles
+* Ajustado estacionalmente
+* ID serie: 	CES3000000001
+
+
+```{r message=FALSE, warning=FALSE}
+base_employ_us <- read_csv("../../../Archivos/Datos/TCP/Fuentes/file.csv")
+```
+
+
+#### Creación de fechas y cambio de base
+Hay una cosa que hace ruido aca: la base del empleo _employ_us_ no se me crea como DF (Lo cual en principio me impidía la union con la producción, pero ahora parece resuelto)
+
+#### Empleo
+```{r}
+###Empleo 
+employ_us <- base_employ_us %>% 
+  mutate(mes  = str_remove(base_employ_us$Period, "M")) %>% 
+  mutate(fecha = parse_date_time(paste(Year, mes, sep = ""), orders = "ym")) %>%
+  mutate(fecha = ymd(fecha)) %>% 
+  rename(obs = Value) %>% 
+  select(fecha, obs)
+
+#establecimiento año base. es una forma media rústica pero no se me ocurrió otra.
+aniob_emp_us <- employ_us %>% 
+  filter(fecha == "2017-01-01") %>%
+  summarise(obs)
+
+#Empleo base enero 2017
+employ_us <- employ_us %>% 
+  mutate(i_ob17 = obs / aniob_emp_us$obs * 100) %>% 
+  select(-obs)
+employ_us  
+
+```
+
+#### Produccion 
+```{r warning=FALSE}
+### Producción 
+manuf_us <-  base_manuf_us %>% 
+  mutate(fecha = DATE) %>% 
+  mutate(anio = year(fecha), mes = month(fecha)) %>% 
+  mutate(fecha1 = parse_date_time(paste(anio, mes, sep = ""), orders = "ym" )) %>%
+  rename(indice_manuf = IPGMFSQ) %>%
+  select(fecha, indice_manuf)
+
+#establecimiento año base
+aniob_manuf_us <- manuf_us %>% 
+  filter(fecha == "2017-01-01") %>% 
+  summarise(indice_manuf)
+
+#Producción base enero 2017
+manuf_us <-  manuf_us %>% 
+  mutate(i_manuf17 = indice_manuf/aniob_manuf_us$indice_manuf * 100)
+manuf_us
+
+```
+### Union de las bases y cálculo de productividad
+
+```{r}
+productividad_us <- employ_us %>%
+  left_join(manuf_us, by = "fecha") %>%
+  mutate(i_produ17 = i_manuf17/i_ob17) %>% 
+  select(fecha, i_produ17, i_manuf17, i_ob17) %>% 
+  filter(fecha >= "1972-01-01")  # acá habría que aplicar un casewhen o similar para complete los valores NA  
+productividad_us
+```
+
+## Índice de Precios al Consumidor 
+
+#### [CPI for All Urban Consumers (CPI-U)](https://beta.bls.gov/dataViewer/view/timeseries/CUSR0000SA0;jsessionid=993AA0F88EC37E868C7BE9DF51C773D6)
+
+
+* Fuente: BLS
+* Frecuencia: mensual 
+* Periodo: 1947 - 2019
+* Base: ¿¿¿¿1981????
+* Ajustado estacionalmente
+* Observaciones: todos los ítems; promedio de las ciudades de EEUU
+* ID serie: CUSR0000SA0
+
+
+```{r}
+base_ipc_us <- read_csv("../../../Archivos/Datos/TCP/Fuentes/cpi.csv")
+```
+
+```{r}
+ipc_us <- base_ipc_us %>% 
+  mutate(mes = as.double(str_remove(base_ipc_us$Period, "M"))) %>%
+  mutate(fecha = parse_date_time(paste(Year, mes, sep = ""), orders = "ym")) %>% 
+  mutate(fecha = ymd(fecha)) %>% 
+  rename(cpi = Value) %>% 
+  select(fecha, cpi) 
+
+#año base ene 2017
+aniob_ipc_us <- ipc_us %>% 
+  filter(fecha == "2017-01-01") %>% 
+  summarise(cpi)
+  
+ipc_us <- ipc_us %>% 
+  mutate(i_ipc_us = cpi/aniob_ipc_us$cpi) %>% 
+  select(-cpi)
+
+```
+
+# Variables de Argentina 
+
+## Producción manufacturera
+
+#### [Metodología de Valor Agregado - INDEC](https://www.indec.gob.ar/ftp/cuadros/economia/metodologia_21_cuentas_nacionales.pdf)
+
+[Valor agregado bruto sectorial a precios de productor en pesos constantes de 1993](https://datos.gob.ar/dataset/sspm-producto-interno-bruto-precios-mercado---valor-agregado-bruto-precios-productor-base-1993)
+
+```{r}
+b_va93 <- read_csv("Fuentes/producto-interno-bruto-valores-trimestrales-base-1993.csv")
+```
+
+#### [Valor Agregado Bruto a precios básicos por rama de actividad económica en millones de pesos a precios corrientes. Base 2004](https://datos.gob.ar/dataset/sspm-valor-agregado-bruto-precios-basicos-por-rama-actividad-economica)
+
+```{r}
+b_va04 <- read_csv("Fuentes/valor-agregado-bruto-por-rama-de-actividad-economica-trimestrales.csv")
+```
+
+```{r}
+aniob_va04 <- b_va04 %>% 
+  select(indice_tiempo, industria_manufacturera_total) %>% 
+  filter(indice_tiempo > "2017-01-01", indice_tiempo < "2017-05-01") %>% 
+  summarise(industria_manufacturera_total)
+  
+va04 <- b_va04 %>%
+  select(indice_tiempo, industria_manufacturera_total) %>%
+  mutate(i_manuf17 = industria_manufacturera_total/aniob_va04$industria_manufacturera_total) %>% 
+  select(-industria_manufacturera_total)
+  
+```
+
+#### Empleo 
+
+
+
+
+
+
+
+#### Tipo de Cambio
