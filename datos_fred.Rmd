@@ -1,0 +1,34 @@
+---
+title: "freadR"
+output: html_notebook
+---
+
+https://cran.r-project.org/web/packages/fredr/vignettes/fredr.html
+
+
+1. Necesitamos APIKEY
+
+2. [Industrial Production: Manufacturing (NAICS)](https://fred.stlouisfed.org/series/IPGMFSQ)
+
+
+```{r}
+
+devtools::install_github("sboysel/fredr") ## UNA SOLA VEZ
+library(fredr)
+```
+
+
+```{r}
+
+# fred_api_key
+fredr_set_key(fred_api_key)
+```
+
+
+```{r}
+base_manuf_us <- fredr(
+  series_id = "IPGMFSQ",
+  observation_start = as.Date("1990-01-01")
+)
+```
+
