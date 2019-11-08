@@ -3,6 +3,9 @@ title: "Datos Bea"
 output: html_notebook
 ---
 
+quiro joder un poco más
+
+
 https://github.com/us-bea/bea.R/blob/master/beaR_instructions.pdf
 
 ```{r}
