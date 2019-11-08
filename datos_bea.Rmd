@@ -42,8 +42,8 @@ beaPayload %>%
 Datos relacionados con [NIPA](https://www.econdb.com/dataset/NIPA/standard-national-income-and-product-accounts-tables/#5006=[5612]&26190=[26200]&to=2019-09-01&from=1929-01-01&h=TIME&v=Series%20description)
 
 ```{r}
-datos_posibles_NIPA <- bea.R::beaSearch('NIPA',beaKey)
-datos_posibles_NIPA
+datos_posibles_FA <- bea.R::beaSearch('FIXEDASSETS',beaKey)
+datos_posibles_FA
 ```
 
 
@@ -73,9 +73,10 @@ consumo_capital
 
 ```{r}
 consumo_capital <- consumo_capital %>% 
-  gather(., key =year, value=value,DataValue_1929:ncol(.)) %>% 
-  mutate(year = parse_number(year)) %>% 
-  select(line_description=LineDescription, metric_name = METRIC_NAME, year, value)
+  gather(., key =year, value=consumo_capital,DataValue_1929:ncol(.)) %>% 
+  mutate(year = parse_number(year),
+         consumo_capital = consumo_capital*10^as.numeric(UNIT_MULT)) %>% 
+  select(line_description=LineDescription, metric_name = METRIC_NAME, year, consumo_capital)
 
 ```
 
@@ -84,34 +85,33 @@ consumo_capital <- consumo_capital %>%
 
 
 ```{r}
-stock_capital <- beaGet(list('UserID' = beaKey, 
+stock_capital <- beaGet(list('UserID' = beaKey,
                              'Method' = 'GetData',
-                             'DatasetName' = 'NIPA',
-                             'TableName' = 'T51000',
+                             'DatasetName' = 'FixedAssets',
+                             'TableName' = 'FAAt101',
                              'Frequency' = 'A',
                              'Year' = 'X',
                              'ResultFormat' = 'json'))
+
 
 stock_capital
 ```
 
 
-
 ```{r}
 stock_capital <- stock_capital %>% 
-  gather(., key =year, value=value,DataValue_1951:ncol(.)) %>% 
-  mutate(year = parse_number(year)) %>% 
-  select(line_description = LineDescription, metric_name = METRIC_NAME, year, value)
-
-```
-
-```{r}
-stock_capital %>% 
-  filter(line_description=='Private',year==1951 )
+  gather(., key =year, value=stock_capital,DataValue_1925:ncol(.)) %>% 
+  mutate(year = parse_number(year),
+         stock_capital = stock_capital*10^as.numeric(UNIT_MULT)) %>% 
+  select(line_description = LineDescription, metric_name = METRIC_NAME, year, stock_capital)
+stock_capital
 ```
 
 
 ```{r}
 consumo_capital %>% inner_join(stock_capital,by = c("line_description", "metric_name", "year"))
 ```
+
+
+
 
