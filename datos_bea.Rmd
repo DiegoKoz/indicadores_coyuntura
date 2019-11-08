@@ -26,6 +26,8 @@ beaSpecs <- list(
   'Year' = 'X',
   'ResultFormat' = 'json'
 )
+
+
 beaPayload <- beaGet(beaSpecs)
 beaPayload
 ```
@@ -58,14 +60,58 @@ datos_posibles_NIPA %>%
 me copio esa linea, remplazo la beaKey, agrego Frquencym year y ResultFormat
 
 ```{r}
-equipment_gdp <- beaGet(list('UserID' = beaKey, 
+consumo_capital <- beaGet(list('UserID' = beaKey, 
                              'Method' = 'GetData',
                              'DatasetName' = 'NIPA',
-                             'TableName' = 'T10105',
-                             'Frequency' = 'Q',
+                             'TableName' = 'T70500',
+                             'Frequency' = 'A',
                              'Year' = 'X',
                              'ResultFormat' = 'json'))
 
-equipment_gdp
+consumo_capital
+```
+
+```{r}
+consumo_capital <- consumo_capital %>% 
+  gather(., key =year, value=value,DataValue_1929:ncol(.)) %>% 
+  mutate(year = parse_number(year)) %>% 
+  select(line_description=LineDescription, metric_name = METRIC_NAME, year, value)
+
+```
+
+
+### Fixed assets
+
+
+```{r}
+stock_capital <- beaGet(list('UserID' = beaKey, 
+                             'Method' = 'GetData',
+                             'DatasetName' = 'NIPA',
+                             'TableName' = 'T51000',
+                             'Frequency' = 'A',
+                             'Year' = 'X',
+                             'ResultFormat' = 'json'))
+
+stock_capital
+```
+
+
+
+```{r}
+stock_capital <- stock_capital %>% 
+  gather(., key =year, value=value,DataValue_1951:ncol(.)) %>% 
+  mutate(year = parse_number(year)) %>% 
+  select(line_description = LineDescription, metric_name = METRIC_NAME, year, value)
+
+```
+
+```{r}
+stock_capital %>% 
+  filter(line_description=='Private',year==1951 )
+```
+
+
+```{r}
+consumo_capital %>% inner_join(stock_capital,by = c("line_description", "metric_name", "year"))
 ```
 
