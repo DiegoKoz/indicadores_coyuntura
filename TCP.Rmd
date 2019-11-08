@@ -28,7 +28,7 @@ Indice de producción industrial de EEUU
 * ID serie: IP.GMF.S
 
 ```{r message=FALSE, warning=FALSE}
-base_manuf_us <- read_csv("../../../Archivos/Datos/TCP/Fuentes/IPGMFSQ.csv")
+base_manuf_us <- read_csv( "fuentes/IPGMFSQ.csv")
 ```
 
 
