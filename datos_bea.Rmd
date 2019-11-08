@@ -2,7 +2,8 @@
 title: "Datos Bea"
 output: html_notebook
 ---
-<!-- prueba de cambio -->
+<!-- prueba de cambio 2 -->
+
 
 https://github.com/us-bea/bea.R/blob/master/beaR_instructions.pdf
 
