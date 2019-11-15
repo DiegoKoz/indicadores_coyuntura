@@ -215,7 +215,7 @@ empleo_nacional_serie_trimestral <- read_excel("fuentes/nacional_serie_empleo_tr
 
 
 #### Tipo de Cambio
-<<<<<<< HEAD
+
 
 ```{r}
 tc_dia_bcra <- read_excel("D:/Users/msuster/Downloads/com3500.xls", 
