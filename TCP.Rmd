@@ -218,10 +218,7 @@ empleo_nacional_serie_trimestral <- read_excel("fuentes/nacional_serie_empleo_tr
 <<<<<<< HEAD
 
 ```{r}
-tc_dia_bcra <- read_excel("fuentes/com3500.xls", 
-=======
 tc_dia_bcra <- read_excel("D:/Users/msuster/Downloads/com3500.xls", 
->>>>>>> 856e84af4a6d6f66e3fee3e9f0f9d0c80b40d232
                 skip = 2) %>% 
   select(- "...3") %>% 
   rename(fecha = Fecha,
@@ -238,9 +235,7 @@ tc_mensual <-  tc_dia_bcra %>%
   # select(-anio) # no se puede eliminar la vble
   arrange(fecha)   # no ordena
 tc_mensual
-<<<<<<< HEAD
+
 ```
 
 
-=======
->>>>>>> 856e84af4a6d6f66e3fee3e9f0f9d0c80b40d232
