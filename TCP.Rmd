@@ -177,6 +177,23 @@ va04 <- b_va04 %>%
 
 #### Empleo 
 
+empleo_nacional_serie_trimestral <- read_excel("1. Datos/Fuentes/nacional_serie_empleo_trimestral.xlsx", 
+                                               sheet = "C2.2", skip = 2) %>% 
+  rename( periodo = "Período") %>% 
+  mutate(cuatri = as.double(str_sub(periodo, 1, 1)),
+         anio = as.double(str_sub(periodo, 9, 13)),
+         mes = case_when(cuatri == 1 ~ 1,
+                         cuatri == 2 ~ 4,
+                         cuatri == 3 ~ 7,
+                         cuatri == 4 ~ 12),
+         fecha = as_date(parse_date_time(paste(anio, mes, sep = "-"), orders = "ym"))) %>% 
+  select(periodo, Industria)
+
+# Productividad
+
+
+
+
 
 
 
@@ -184,3 +201,20 @@ va04 <- b_va04 %>%
 
 
 #### Tipo de Cambio
+tc_dia_bcra <- read_excel("D:/Users/msuster/Downloads/com3500.xls", 
+                skip = 2) %>% 
+  select(- "...3") %>% 
+  rename(fecha = Fecha,
+         tc = "Tipo de Cambio de Referencia - en Pesos - por Dólar")
+      
+tc_mensual <-  tc_dia_bcra %>% 
+  select(fecha, tc) %>% 
+  mutate(mes = month(fecha),
+         anio = year(fecha)) %>% 
+  group_by(anio, mes) %>% 
+  summarise(tc_promedio_mes = mean(tc)) %>% 
+  mutate(fecha = as_date(parse_date_time(paste(anio, mes, sep = ""), orders = "ym"))) %>% 
+  select(fecha, tc_promedio_mes) %>% 
+  # select(-anio) # no se puede eliminar la vble
+  arrange(fecha)   # no ordena
+tc_mensual
