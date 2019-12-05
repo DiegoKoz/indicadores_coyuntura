@@ -7,6 +7,7 @@ output:
 
 ```{r message=FALSE, warning=FALSE}
 library(readr)
+library(readxl)
 library(tidyverse)
 library(stringr)
 library(lubridate)
@@ -59,18 +60,18 @@ employ_us <- base_employ_us %>%
   mutate(mes  = str_remove(base_employ_us$Period, "M")) %>% 
   mutate(fecha = parse_date_time(paste(Year, mes, sep = ""), orders = "ym")) %>%
   mutate(fecha = ymd(fecha)) %>% 
-  rename(obs = Value) %>% 
-  select(fecha, obs)
+  rename(empleo_us = Value) %>% 
+  select(fecha, empleo_us)
 
 #establecimiento año base. es una forma media rústica pero no se me ocurrió otra.
 aniob_emp_us <- employ_us %>% 
   filter(fecha == "2017-01-01") %>%
-  summarise(obs)
+  summarise(empleo_us)
 
 #Empleo base enero 2017
 employ_us <- employ_us %>% 
-  mutate(i_ob17 = obs / aniob_emp_us$obs * 100) %>% 
-  select(-obs)
+  mutate(i_empleo_us17 = empleo_us / aniob_emp_us$empleo_us * 100) %>% 
+  select(-empleo_us)
 employ_us  
 
 ```
@@ -92,7 +93,8 @@ aniob_manuf_us <- manuf_us %>%
 
 #Producción base enero 2017
 manuf_us <-  manuf_us %>% 
-  mutate(i_manuf17 = indice_manuf/aniob_manuf_us$indice_manuf * 100)
+  mutate(i_manuf_us17 = indice_manuf/aniob_manuf_us$indice_manuf * 100) %>% 
+  select(-indice_manuf)
 manuf_us
 
 ```
@@ -101,9 +103,10 @@ manuf_us
 ```{r}
 productividad_us <- employ_us %>%
   left_join(manuf_us, by = "fecha") %>%
-  mutate(i_produ17 = i_manuf17/i_ob17) %>% 
-  select(fecha, i_produ17, i_manuf17, i_ob17) %>% 
-  filter(fecha >= "1972-01-01")  # acá habría que aplicar un casewhen o similar para complete los valores NA  
+  mutate(i_productividad_us17 = i_manuf_us17/i_empleo_us17) %>% 
+  select(fecha, i_productividad_us17, i_manuf_us17, i_empleo_us17) %>% 
+  filter(fecha >= "1972-01-01") %>%  # acá habría que aplicar un casewhen o similar para complete los valores NA
+  select(fecha, i_productividad_us17)
 productividad_us
 ```
 
@@ -139,9 +142,9 @@ aniob_ipc_us <- ipc_us %>%
   summarise(cpi)
   
 ipc_us <- ipc_us %>% 
-  mutate(i_ipc_us = cpi/aniob_ipc_us$cpi) %>% 
+  mutate(i_ipc_us17 = cpi/aniob_ipc_us$cpi) %>% 
   select(-cpi)
-
+ipc_us
 ```
 
 # Variables de Argentina 
@@ -153,33 +156,36 @@ ipc_us <- ipc_us %>%
 [Valor agregado bruto sectorial a precios de productor en pesos constantes de 1993](https://datos.gob.ar/dataset/sspm-producto-interno-bruto-precios-mercado---valor-agregado-bruto-precios-productor-base-1993)
 
 ```{r}
-b_va93 <- read_csv("fuentes/producto-interno-bruto-valores-trimestrales-base-1993.csv")
+# b_va93 <- read_csv("fuentes/producto-interno-bruto-valores-trimestrales-base-1993.csv")
 ```
 
 #### [Valor Agregado Bruto a precios básicos por rama de actividad económica en millones de pesos a precios corrientes. Base 2004](https://datos.gob.ar/dataset/sspm-valor-agregado-bruto-precios-basicos-por-rama-actividad-economica)
 
 ```{r}
-b_va04 <- read_csv("fuentes/valor-agregado-bruto-por-rama-de-actividad-economica-trimestrales.csv")
+base_manuf_arg04 <- read_csv("fuentes/valor-agregado-bruto-por-rama-de-actividad-economica-trimestrales.csv")
 ```
 
 ```{r}
-aniob_va04 <- b_va04 %>% 
+aniob_va04 <- base_manuf_arg04 %>% 
   select(indice_tiempo, industria_manufacturera_total) %>% 
   filter(indice_tiempo > "2017-01-01", indice_tiempo < "2017-05-01") %>% 
   summarise(industria_manufacturera_total)
   
-va04 <- b_va04 %>%
+manuf_arg <- base_manuf_arg04 %>%
   select(indice_tiempo, industria_manufacturera_total) %>%
-  mutate(i_manuf17 = industria_manufacturera_total/aniob_va04$industria_manufacturera_total) %>% 
+  rename(fecha = indice_tiempo) %>% 
+  mutate(i_manuf_arg17 = industria_manufacturera_total/aniob_va04$industria_manufacturera_total) %>% 
   select(-industria_manufacturera_total)
-  
+manuf_arg  
 ```
 
 #### Empleo 
 
-empleo_nacional_serie_trimestral <- read_excel("1. Datos/Fuentes/nacional_serie_empleo_trimestral.xlsx", 
-                                               sheet = "C2.2", skip = 2) %>% 
-  rename( periodo = "Período") %>% 
+```{r}
+empleo_nacional_serie_trimestral <- read_excel("fuentes/nacional_serie_empleo_trimestral (2).xlsx", 
+                                               sheet = "C2.2", skip = 2, n_max = 93) %>% 
+  rename( periodo = "Período",
+          empleo_arg = "Industria") %>% 
   mutate(cuatri = as.double(str_sub(periodo, 1, 1)),
          anio = as.double(str_sub(periodo, 9, 13)),
          mes = case_when(cuatri == 1 ~ 1,
@@ -187,38 +193,46 @@ empleo_nacional_serie_trimestral <- read_excel("1. Datos/Fuentes/nacional_serie_
                          cuatri == 3 ~ 7,
                          cuatri == 4 ~ 12),
          fecha = as_date(parse_date_time(paste(anio, mes, sep = "-"), orders = "ym"))) %>% 
-  select(periodo, Industria)
+  select(fecha, empleo_arg)
 
-# Productividad
+aniob_emp_ar <- empleo_nacional_serie_trimestral %>% 
+  filter(fecha > "2017-01-01", fecha < "2017-05-01") %>% 
+  summarise(empleo_arg)
 
+empleo_arg <-  empleo_nacional_serie_trimestral %>% 
+  mutate(i_empleo_arg17 = empleo_arg/aniob_emp_ar$empleo_arg) %>% 
+  select(-empleo_arg)
+empleo_arg
+```
 
-
-
+### Productividad
 
 ```{r}
-
-empleo_nacional_serie_trimestral <- read_excel("fuentes/nacional_serie_empleo_trimestral.xlsx", 
-                                               sheet = "C2.2", skip = 2) %>% 
-  rename( periodo = "Período") %>% 
-  mutate(cuatri = as.double(str_sub(periodo, 1, 1)),
-         anio = as.double(str_sub(periodo, 9, 13)),
-         mes = case_when(cuatri == 1 ~ 1,
-                         cuatri == 2 ~ 4,
-                         cuatri == 3 ~ 7,
-                         cuatri == 4 ~ 12),
-         fecha = as_date(parse_date_time(paste(anio, mes, sep = "-"), orders = "ym"))) %>% 
-  select(periodo, Industria)
+productividad_arg <- empleo_arg %>%
+  left_join(manuf_arg, by = "fecha") %>%
+  mutate(i_productividad_arg17 = i_manuf_arg17/i_empleo_arg17) %>% 
+  filter(fecha >= "2004-01-01") %>%   # acá habría que aplicar un casewhen o similar para complete los valores NA   
+  select(fecha, i_productividad_arg17)
+productividad_arg
 
 ```
 
-# Productividad
+## Índice de precios al consumidor
+
+```{r}
+ipc_arg <- read_excel("fuentes/ipc_arg.xlsx", 
+    col_types = c("date", "numeric", "numeric")) %>% 
+  select(-ipc9_ene06) %>% 
+  mutate(fecha = as.Date(fecha)) %>% 
+  rename(i_ipc9_17 = ipc9_17)
+ipc_arg
+```
 
 
 #### Tipo de Cambio
 
-
-```{r}
-tc_dia_bcra <- read_excel("D:/Users/msuster/Downloads/com3500.xls", 
+```{r warning=FALSE}
+tc_dia_bcra <- read_excel("fuentes/com3500.xls", 
                 skip = 2) %>% 
   select(- "...3") %>% 
   rename(fecha = Fecha,
@@ -236,6 +250,33 @@ tc_mensual <-  tc_dia_bcra %>%
   arrange(fecha)   # no ordena
 tc_mensual
 
+```
+
+## TCP 
+
+```{r}
+#promedios 59-72
+tcc_prom  <-  0.000000000026316428571
+tcp_arb_tcc_prom <- 0.914518061659054
+ipc_prom <- 0.000000000000142453938
+cpi_prom <- 0.134395615533281000000
+ipt_arg_prom <- 0.194849039059985000000
+ipt_eeuu_prom <- 0.215950602779915000000
+
+tcp <- tc_mensual %>% 
+  left_join(productividad_us, by = "fecha") %>% 
+  left_join(ipc_us, by = "fecha") %>% 
+  left_join(productividad_arg, by = "fecha") %>% 
+  left_join(ipc_arg, by = "fecha") %>% 
+  mutate(ipc_arg_b = i_ipc9_17/ipc_prom,
+         ipc_us_b = i_ipc_us17 / cpi_prom,
+         ipt_arg_b = i_productividad_arg17 / ipt_arg_prom,
+         ipt_us_b = i_productividad_us17 / ipt_eeuu_prom,
+         tcp_arbitrario = tcc_prom * ((ipt_arg_b / ipt_us_b) * (ipc_us_b / ipc_arg_b)),
+         sobrevaluacion = tcp_arbitrario / tcp_arb_tcc_prom,
+         tcp_definitivo = sobrevaluacion * tc_promedio_mes) 
+  
+tcp %>% select(fecha, tc_promedio_mes, sobrevaluacion, tcp_definitivo)
 ```
 
 
