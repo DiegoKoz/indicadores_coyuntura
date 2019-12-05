@@ -168,7 +168,7 @@ base_manuf_arg04 <- read_csv("fuentes/valor-agregado-bruto-por-rama-de-actividad
 ```{r}
 aniob_va04 <- base_manuf_arg04 %>% 
   select(indice_tiempo, industria_manufacturera_total) %>% 
-  filter(indice_tiempo > "2017-01-01", indice_tiempo < "2017-05-01") %>% 
+  filter(indice_tiempo == "2017-01-01") %>% 
   summarise(industria_manufacturera_total)
   
 manuf_arg <- base_manuf_arg04 %>%
@@ -196,7 +196,7 @@ empleo_nacional_serie_trimestral <- read_excel("fuentes/nacional_serie_empleo_tr
   select(fecha, empleo_arg)
 
 aniob_emp_ar <- empleo_nacional_serie_trimestral %>% 
-  filter(fecha > "2017-01-01", fecha < "2017-05-01") %>% 
+  filter(fecha == "2017-01-01") %>% 
   summarise(empleo_arg)
 
 empleo_arg <-  empleo_nacional_serie_trimestral %>% 
@@ -275,8 +275,10 @@ tcp <- tc_mensual %>%
          tcp_arbitrario = tcc_prom * ((ipt_arg_b / ipt_us_b) * (ipc_us_b / ipc_arg_b)),
          sobrevaluacion = tcp_arbitrario / tcp_arb_tcc_prom,
          tcp_definitivo = sobrevaluacion * tc_promedio_mes) 
-  
+
+tcp  
 tcp %>% select(fecha, tc_promedio_mes, sobrevaluacion, tcp_definitivo)
+options (scipen = 999)
 ```
 
 
