@@ -49,6 +49,7 @@ Total de obreros ocupados del sector industrial.
 base_employ_us <- read_csv("fuentes/file.csv")
 ```
 
+Nota: todos los números indices (cuyas variables se identifican con el prefijo "i_") se construirán con año base enero 2017.   
 
 #### Creación de fechas y cambio de base
 Hay una cosa que hace ruido aca: la base del empleo _employ_us_ no se me crea como DF (Lo cual en principio me impidía la union con la producción, pero ahora parece resuelto)
@@ -57,9 +58,9 @@ Hay una cosa que hace ruido aca: la base del empleo _employ_us_ no se me crea co
 ```{r}
 ###Empleo 
 employ_us <- base_employ_us %>% 
-  mutate(mes  = str_remove(base_employ_us$Period, "M")) %>% 
-  mutate(fecha = parse_date_time(paste(Year, mes, sep = ""), orders = "ym")) %>%
-  mutate(fecha = ymd(fecha)) %>% 
+  mutate(mes  = str_remove(base_employ_us$Period, "M"),
+         fecha = parse_date_time(paste(Year, mes, sep = ""), orders = "ym"),
+         fecha = ymd(fecha)) %>% 
   rename(empleo_us = Value) %>% 
   select(fecha, empleo_us)
 
@@ -70,7 +71,7 @@ aniob_emp_us <- employ_us %>%
 
 #Empleo base enero 2017
 employ_us <- employ_us %>% 
-  mutate(i_empleo_us17 = empleo_us / aniob_emp_us$empleo_us * 100) %>% 
+  mutate(i_empleo_us = empleo_us / aniob_emp_us$empleo_us * 100) %>% 
   select(-empleo_us)
 employ_us  
 
@@ -80,9 +81,9 @@ employ_us
 ```{r warning=FALSE}
 ### Producción 
 manuf_us <-  base_manuf_us %>% 
-  mutate(fecha = DATE) %>% 
-  mutate(anio = year(fecha), mes = month(fecha)) %>% 
-  mutate(fecha1 = parse_date_time(paste(anio, mes, sep = ""), orders = "ym" )) %>%
+  mutate(fecha = DATE,
+         anio = year(fecha), mes = month(fecha),
+         fecha1 = parse_date_time(paste(anio, mes, sep = ""), orders = "ym" )) %>%
   rename(indice_manuf = IPGMFSQ) %>%
   select(fecha, indice_manuf)
 
@@ -93,7 +94,7 @@ aniob_manuf_us <- manuf_us %>%
 
 #Producción base enero 2017
 manuf_us <-  manuf_us %>% 
-  mutate(i_manuf_us17 = indice_manuf/aniob_manuf_us$indice_manuf * 100) %>% 
+  mutate(i_manuf_us = indice_manuf/aniob_manuf_us$indice_manuf * 100) %>% 
   select(-indice_manuf)
 manuf_us
 
@@ -103,10 +104,9 @@ manuf_us
 ```{r}
 productividad_us <- employ_us %>%
   left_join(manuf_us, by = "fecha") %>%
-  mutate(i_productividad_us17 = i_manuf_us17/i_empleo_us17) %>% 
-  select(fecha, i_productividad_us17, i_manuf_us17, i_empleo_us17) %>% 
-  filter(fecha >= "1972-01-01") %>%  # acá habría que aplicar un casewhen o similar para complete los valores NA
-  select(fecha, i_productividad_us17)
+  mutate(i_productividad_us = i_manuf_us/i_empleo_us) %>% 
+  select(fecha, i_productividad_us) %>% 
+  filter(fecha >= "1972-01-01")  # acá habría que aplicar un casewhen o similar para complete los valores NA
 productividad_us
 ```
 
@@ -130,9 +130,8 @@ base_ipc_us <- read_csv("fuentes/cpi.csv")
 
 ```{r}
 ipc_us <- base_ipc_us %>% 
-  mutate(mes = as.double(str_remove(base_ipc_us$Period, "M"))) %>%
-  mutate(fecha = parse_date_time(paste(Year, mes, sep = ""), orders = "ym")) %>% 
-  mutate(fecha = ymd(fecha)) %>% 
+  mutate(mes = as.double(str_remove(base_ipc_us$Period, "M")),
+         fecha = ymd(parse_date_time(paste(Year, mes, sep = ""), orders = "ym"))) %>% 
   rename(cpi = Value) %>% 
   select(fecha, cpi) 
 
@@ -142,9 +141,16 @@ aniob_ipc_us <- ipc_us %>%
   summarise(cpi)
   
 ipc_us <- ipc_us %>% 
-  mutate(i_ipc_us17 = cpi/aniob_ipc_us$cpi) %>% 
+  mutate(i_ipc_us = cpi/aniob_ipc_us$cpi) %>% 
   select(-cpi)
 ipc_us
+
+cpi_anual <- file <- read_csv("C:/Archivos/Datos/BLS/file.csv") %>%
+  group_by(Year) %>% 
+  summarise(cpi = mean(Value))
+
+cpi_anual %>% filter(Year >= 1982, Year <= 1984) %>% 
+  mutate( cpi = mean(cpi))
 ```
 
 # Variables de Argentina 
@@ -174,7 +180,7 @@ aniob_va04 <- base_manuf_arg04 %>%
 manuf_arg <- base_manuf_arg04 %>%
   select(indice_tiempo, industria_manufacturera_total) %>%
   rename(fecha = indice_tiempo) %>% 
-  mutate(i_manuf_arg17 = industria_manufacturera_total/aniob_va04$industria_manufacturera_total) %>% 
+  mutate(i_manuf_arg = industria_manufacturera_total/aniob_va04$industria_manufacturera_total) %>% 
   select(-industria_manufacturera_total)
 manuf_arg  
 ```
@@ -200,7 +206,7 @@ aniob_emp_ar <- empleo_nacional_serie_trimestral %>%
   summarise(empleo_arg)
 
 empleo_arg <-  empleo_nacional_serie_trimestral %>% 
-  mutate(i_empleo_arg17 = empleo_arg/aniob_emp_ar$empleo_arg) %>% 
+  mutate(i_empleo_arg = empleo_arg/aniob_emp_ar$empleo_arg) %>% 
   select(-empleo_arg)
 empleo_arg
 ```
@@ -210,9 +216,9 @@ empleo_arg
 ```{r}
 productividad_arg <- empleo_arg %>%
   left_join(manuf_arg, by = "fecha") %>%
-  mutate(i_productividad_arg17 = i_manuf_arg17/i_empleo_arg17) %>% 
+  mutate(i_productividad_arg = i_manuf_arg/i_empleo_arg) %>% 
   filter(fecha >= "2004-01-01") %>%   # acá habría que aplicar un casewhen o similar para complete los valores NA   
-  select(fecha, i_productividad_arg17)
+  select(fecha, i_productividad_arg)
 productividad_arg
 
 ```
@@ -224,7 +230,7 @@ ipc_arg <- read_excel("fuentes/ipc_arg.xlsx",
     col_types = c("date", "numeric", "numeric")) %>% 
   select(-ipc9_ene06) %>% 
   mutate(fecha = as.Date(fecha)) %>% 
-  rename(i_ipc9_17 = ipc9_17)
+  rename(i_ipc9 = ipc9_17)
 ipc_arg
 ```
 
