@@ -30,7 +30,7 @@ Indice de producción industrial de EEUU
 * ID serie: IP.GMF.S
 
 ```{r message=FALSE, warning=FALSE}
-base_manuf_us <- read_csv( "fuentes/IPGMFSQ.csv")
+base_manuf_us <- read_csv( "fuentes/manufacturing_production.csv")
 ```
 
 
@@ -47,7 +47,7 @@ Total de obreros ocupados del sector industrial.
 
 
 ```{r message=FALSE, warning=FALSE}
-base_employ_us <- read_csv("fuentes/file.csv")
+base_employ_us <- read_csv("fuentes/employ.csv")
 ```
 
 Nota: todos los números indices (cuyas variables se identifican con el prefijo "i_") se construirán con año base enero 2017.   
@@ -60,7 +60,7 @@ Creo una función para calcular números índice
 generar_indice <- function(serie,fecha, fecha_base){
 
   valor_base <- serie[which(fecha==fecha_base)]
-  (serie/valor_base) * 100
+  (serie/valor_base)
   }
 
 ```
@@ -133,7 +133,6 @@ ipc_us <- base_ipc_us %>%
                                     fecha = fecha,
                                     fecha_base = "2017-01-01")) %>% 
   select(fecha, i_ipc_us) 
-ipc_us
 ```
 
 
@@ -165,7 +164,7 @@ ipc_us
 #### [Valor Agregado Bruto a precios básicos por rama de actividad económica en millones de pesos a precios corrientes. Base 2004](https://datos.gob.ar/dataset/sspm-valor-agregado-bruto-precios-basicos-por-rama-actividad-economica)
 
 ```{r}
-base_manuf_arg04 <- read_csv("fuentes/valor-agregado-bruto-por-rama-de-actividad-economica-trimestrales.csv")
+base_manuf_arg04 <- read_csv("fuentes/va_p_ctes_arg.csv")
 
 manuf_arg <- base_manuf_arg04 %>%
   select(fecha=indice_tiempo, industria_manufacturera_total) %>%
@@ -178,7 +177,7 @@ manuf_arg <- base_manuf_arg04 %>%
 #### Empleo 
 
 ```{r}
-empleo_nacional_serie_trimestral <- read_excel("fuentes/nacional_serie_empleo_trimestral (2).xlsx", 
+empleo_nacional_serie_trimestral <- read_excel("fuentes/empleo_arg.xlsx", 
                                                sheet = "C2.2", skip = 2, n_max = 93) %>% 
   rename( periodo = "Período",
           empleo_arg = "Industria") %>% 
@@ -195,7 +194,7 @@ empleo_arg <-  empleo_nacional_serie_trimestral %>%
   mutate(i_empleo_arg = generar_indice(serie = empleo_arg,
                                     fecha = fecha,
                                     fecha_base = "2017-01-01")) %>% 
-  select(-empleo_arg)
+  select(-empleo_arg) #buscar otra variable empleo, con mayor actualizacion (EPH por ej)
 empleo_arg
 ```
 
@@ -211,7 +210,7 @@ productividad_arg <- empleo_arg %>%
 #agrego todos los meses
 productividad_arg <- productividad_arg %>% 
   complete(fecha = seq.Date(min(fecha), max(fecha), by="month")) %>% 
-  mutate(i_productividad_arg = na_interpolation(i_productividad_arg,option = 'linear'))
+  mutate(i_productividad_arg = na_interpolation(i_productividad_arg,option = 'linear')) #Revisar si se puede ajustar con el IPI industrial del INDEC o FIEL
 productividad_arg
 
 ```
@@ -223,8 +222,7 @@ ipc_arg <- read_excel("fuentes/ipc_arg.xlsx",
     col_types = c("date", "numeric", "numeric")) %>% 
   select(-ipc9_ene06) %>% 
   mutate(fecha = as.Date(fecha)) %>% 
-  rename(i_ipc9 = ipc9_17)
-ipc_arg
+  rename(i_ipc9 = ipc9_17) #Revisar si se puede construir el ipc con las bases crudas 
 ```
 
 
@@ -240,14 +238,16 @@ tc_mensual <- tc_dia_bcra %>%
  group_by(fecha=floor_date(fecha, "month")) %>% 
   summarise(tc_promedio_mes = mean(tc)) %>% 
   mutate(fecha=date(fecha))
+
+#promedios 59-72
+promedios_59_72 <- read_csv("fuentes/promedios_59_72.txt") %>% spread(variable,valor)
+
+# options (scipen = 999)
 ```
 
 ## TCP 
 
 ```{r}
-#promedios 59-72
-promedios_59_72 <- read_csv("fuentes/promedios_59_72.txt") %>% spread(variable,valor)
-
 tcp <- tc_mensual %>% 
   left_join(productividad_us, by = "fecha") %>% 
   left_join(ipc_us, by = "fecha") %>% 
@@ -257,12 +257,13 @@ tcp <- tc_mensual %>%
          ipc_us_b = i_ipc_us / promedios_59_72$cpi_prom,
          ipt_arg_b = i_productividad_arg / promedios_59_72$ipt_arg_prom,
          ipt_us_b = i_productividad_us / promedios_59_72$ipt_eeuu_prom,
-         tcp_arbitrario = promedios_59_72$tcc_prom * ((ipt_arg_b / ipt_us_b) * (ipc_us_b / ipc_arg_b)),
-         sobrevaluacion = tcp_arbitrario / promedios_59_72$tcp_arb_tcc_prom,
+         tcp_arbitrario = promedios_59_72$tcc_prom * ((ipt_us_b / ipt_arg_b) * (ipc_arg_b / ipc_us_b)),
+         sobrevaluacion = (tcp_arbitrario / tc_promedio_mes) / promedios_59_72$tcp_arb_tcc_prom,
          tcp_definitivo = sobrevaluacion * tc_promedio_mes) 
 
 tcp  
-tcp %>% select(fecha, tc_promedio_mes, sobrevaluacion, tcp_definitivo)
+tcp %>% select(fecha, tc_promedio_mes, tcp_arbitrario, sobrevaluacion, tcp_definitivo) %>% filter(fecha >= "2017-01-01")
+
 ```
 
 ```{r}
@@ -275,6 +276,10 @@ g1 <- tcp %>%
   
 g2 <- tcp %>% 
  ggplot(aes(fecha,y=tc_promedio_mes)) +
+  geom_line(color='darkgreen')
+
+g3 <- tcp %>% 
+ ggplot(aes(fecha,y=sobrevaluacion)) +
   geom_line(color='darkgreen')
 
 cowplot::plot_grid(g1,g2,nrow = 2)
