@@ -136,19 +136,6 @@ ipc_us <- base_ipc_us %>%
 ```
 
 
-## arreglar esto
-```{r}
-
-# cpi_anual <- read_csv("C:/Archivos/Datos/BLS/file.csv") %>%
-#   group_by(Year) %>% 
-#   summarise(cpi = mean(Value))
-# 
-# cpi_anual %>% filter(Year >= 1982, Year <= 1984) %>% 
-#   mutate( cpi = mean(cpi))
-
-```
-
-
 # Variables de Argentina 
 
 ## Producción manufacturera
@@ -237,7 +224,7 @@ tc_dia_bcra <- read_excel("fuentes/com3500.xls",
 tc_mensual <- tc_dia_bcra %>%
  group_by(fecha=floor_date(fecha, "month")) %>% 
   summarise(tc_promedio_mes = mean(tc)) %>% 
-  mutate(fecha=date(fecha))
+  mutate(fecha=date(fecha)) #armar una nueva variable con TC a fin de mes
 
 #promedios 59-72
 promedios_59_72 <- read_csv("fuentes/promedios_59_72.txt") %>% spread(variable,valor)
