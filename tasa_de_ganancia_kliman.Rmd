@@ -27,7 +27,7 @@ generar_indice <- function(serie,fecha, fecha_base){
   (serie/valor_base)
   }
 
-cpi_anual <- read_csv("cpi.csv") %>%
+cpi_anual <- read_csv("fuentes/cpi.csv") %>%
   group_by(Year) %>% 
   summarise(cpi = mean(Value)) %>% 
   rename(fecha = Year) %>% 
@@ -53,22 +53,22 @@ Links a los distintos años:
 
 
 ```{r message=FALSE, warning=FALSE}
-corporate_profits_btaxes_1929_1948 <- read_csv("Table 6.17A. Corporate Profits Before Tax by Industry_1929-1948.csv", skip = 4) %>% 
+corporate_profits_btaxes_1929_1948 <- read_csv("fuentes/Table 6.17A. Corporate Profits Before Tax by Industry_1929-1948.csv", skip = 4) %>% 
   select(-Line) %>%
   rename(sector = X2) %>%
   na.omit(corporate_profits_btaxes_1929_1948)   
   
-corporate_profits_btaxes_1948_1987 <- read_csv("Table 6.17B. Corporate Profits Before Tax by Industry_1948-1987.csv", skip = 4) %>%
+corporate_profits_btaxes_1948_1987 <- read_csv("fuentes/Table 6.17B. Corporate Profits Before Tax by Industry_1948-1987.csv", skip = 4) %>%
   select(-Line, -"1948") %>%
   rename(sector = X2) %>%
   na.omit(corporate_profits_btaxes_1948_1987)
 
-corporate_profits_btaxes_1987_2000 <- read_csv("Table 6.17C. Corporate Profits Before Tax by Industry_1987-2000.csv", skip = 4) %>%
+corporate_profits_btaxes_1987_2000 <- read_csv("fuentes/Table 6.17C. Corporate Profits Before Tax by Industry_1987-2000.csv", skip = 4) %>%
   select(-Line, -"1987") %>%
   rename(sector = X2) %>%
   na.omit(corporate_profits_btaxes_1987_2000)
 
-corporate_profits_btaxes_2000_2018 <- read_csv("Table 6.17D. Corporate Profits Before Tax by Industry_2000-2018.csv", skip = 4) %>%
+corporate_profits_btaxes_2000_2018 <- read_csv("fuentes/Table 6.17D. Corporate Profits Before Tax by Industry_2000-2018.csv", skip = 4) %>%
   select(-Line, -"2000") %>%
   rename(sector=X2) %>%
   na.omit(corporate_profits_btaxes_2000_2018)
@@ -105,7 +105,7 @@ Organizada por industria y por forma legal. Serie única de 1929 a 2018.
 Originalmente en billones de USD (modificada a millones).
 
 ```{r message=FALSE, warning=FALSE}
-fixed_assets <- read_csv("Table 6.3. Historical-Cost Net Stock of Private Fixed Assets by Industry Group and Legal Form of Organization.csv", skip = 4) %>%
+fixed_assets <- read_csv("fuentes/Table 6.3. Historical-Cost Net Stock of Private Fixed Assets by Industry Group and Legal Form of Organization.csv", skip = 4) %>%
   select(-Line) %>%
   rename(sector = X2) %>%
   na.omit(fixed_assets) %>%
