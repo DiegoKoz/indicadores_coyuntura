@@ -99,65 +99,110 @@ rm(corporate_profits_btaxes_1929_1948,
 
 ### [Capital Adelantado](https://apps.bea.gov/iTable/iTable.cfm?reqid=10&step=3&isuri=1&table_list=49&series=q&first_year=2011&allyears=1&tabledisplay=&scale=-99&last_year=2018) 
 
+#### Costos Históricos
+
 Stock Neto de los activos privados fijos de las corporaciones a precios históricos.
 Tabla 6.3. Kliman toma la línea 2, es decir, el stock de las Corporate unicamente.
-Organizada por industria y por forma legal. Serie única de 1929 a 2018. 
+Organizada por industria y por forma legal. Serie de 1929 a 2018. 
 Originalmente en billones de USD (modificada a millones).
 
 ```{r message=FALSE, warning=FALSE}
-fixed_assets <- read_csv("fuentes/Table 6.3. Historical-Cost Net Stock of Private Fixed Assets by Industry Group and Legal Form of Organization.csv", skip = 4) %>%
+fixed_assets_hc <- read_csv("fuentes/Table 6.3. Historical-Cost Net Stock of Private Fixed Assets by Industry Group and Legal Form of Organization.csv", skip = 4) %>%
   select(-Line) %>%
   rename(sector = X2) %>%
-  na.omit(fixed_assets) %>%
+  na.omit(fixed_assets_hc) %>%
+  gather(.,
+           key = fecha,
+         value = stock,
+         2:95) %>%
+  mutate(stock_hc = stock * 1000,
+         fecha = as.Date(parse_datetime(fecha, format = "%Y"))) %>% 
+  select(fecha, everything(.), -stock)
+fixed_assets_hc      
+    
+```
+
+#### [Costos corrientes](https://apps.bea.gov/iTable/iTable.cfm?reqid=10&step=3&isuri=1&table_list=49&series=q&first_year=2011&allyears=1&tabledisplay=&scale=-99&last_year=2018)
+
+Stock Neto de los activos privados fijos de las corporaciones a precios corrientes (Tabla 6.1).
+Mismas características que la serie a precios históricos.
+
+```{r}
+
+fixed_assets_cc  <- read_csv("fuentes/stock_current_cost.csv", 
+    skip = 4) %>% 
+  select(-Line) %>%
+  rename(sector = X2) %>%
+  na.omit(fixed_assets_hc) %>%
   gather(.,
            key = fecha,
          value = stock,
          2:95) %>%
   mutate(stock = stock * 1000,
          fecha = as.Date(parse_datetime(fecha, format = "%Y"))) %>% 
-  select(fecha, everything(.))
-fixed_assets      
-    
+  select(fecha, everything(.)) %>% 
+  rename(sector.x = sector, stock_cc = stock)
+fixed_assets_cc      
+  
 ```
 
-### Tasa de Ganancia
+### Tasa de Ganancia de las Corporaciones
 
 ```{r}
-rop <- fixed_assets %>%
+rop <- fixed_assets_hc %>%
   left_join(corporate_profits_unificacion, by = "fecha") %>% 
+  left_join(fixed_assets_cc, by = c("sector.x", "fecha")) %>% 
   filter(sector.x == "Corporate",
          sector.y == "Corporate") %>%
-  # group_by(fecha) %>% 
-  mutate(tg = profit_corp / stock,
-          stock_anio_ant = lag(stock, k = 1),
-          tg_1 = profit_corp / stock_anio_ant * 100 )
+  mutate(stock_hc_anio_ant = lag(stock_hc, k = 1),
+         stock_cc_anio_ant = lag(stock_cc, k = 1),
+          tg_hc = profit_corp / stock_hc_anio_ant * 100, 
+          tg_cc = profit_corp / stock_cc_anio_ant * 100 ) %>% 
+  select(fecha, stock_hc, stock_hc_anio_ant, stock_cc, stock_cc_anio_ant, 
+         profit_corp, tg_cc, tg_hc)
 rop
 
-#Gráfico  
+#Gráficos
+
+# Tg de kliman
 g1 <- rop %>% 
-  ggplot(aes(fecha, tg_1))+
-  geom_line()+ #por qué no se puede hacer un grafico de linea? 
-  labs(title = "tg a la kliman")+
-  theme(legend.position = 'none')
+  ggplot(aes(fecha, tg_hc))+
+  geom_line()+ 
+  labs(title = "Tasa de ganancia con stock valuado a costos históricos",
+       subtitle = "Metodología utilizada por Kliman")+
+  geom_smooth(size = 1, linetype = 1, method = "lm", se = TRUE)+
+  theme(legend.position = 'none')+
+  theme_minimal()
 g1
+
+# comparación de tg's
+g2 <- rop %>% 
+    ggplot(aes(fecha, tg_cc, color = "tg_cc"))+
+    geom_line()+ 
+    geom_line(aes(fecha, tg_hc, color = "tg_hc"))+
+    scale_color_discrete(name = "Tasas de ganancia") + #como modificar este label?
+    labs(title = "Comparación de tasas de ganancia") +
+    theme_minimal()
+g2
 
 # ruta_arch <- "graf.png"
 # png(ruta_arch)
 # plot(g1)
 # dev.off()
 
-summary(rop)
+# Resumen tg's
+rop %>% select(tg_cc, tg_hc) %>% summary(rop)
 
 ```
 
 #### Tasa de Ganancia sector industrial y farms
 ```{r}
 #problema para calcularla con el stock del año anterior
-rop_rama <- fixed_assets %>%
+rop_rama <- fixed_assets_hc %>%
   filter(sector %in% c("Private fixed assets", "Corporate", "Farms", "Manufacturing")) %>% 
   left_join(corporate_profits_unificacion, by = c("fecha", "sector")) %>% 
   group_by(fecha, sector) %>% 
-  summarise(tg_1 = profit_corp / stock * 100)
+  summarise(tg_1 = profit_corp / stock_hc * 100)
 rop_rama
 
 ```
