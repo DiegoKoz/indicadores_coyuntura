@@ -11,6 +11,7 @@ Description: compendio de código para elaborar indicadores de coyuntura
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
+URL: https://github.com/DiegoKoz/indicadores_coyuntura
 RoxygenNote: 6.1.1
 Suggests: 
     knitr,

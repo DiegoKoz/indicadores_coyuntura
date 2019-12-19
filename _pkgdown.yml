@@ -1,0 +1,14 @@
+url: https://diegokoz.github.io/indicadores_coyuntura
+home:
+  title: Compendio de código para elaborar indicadores de coyuntura
+
+destination: docs
+
+toc:
+  depth: 2
+template:
+  params:
+    bootswatch: united
+    ganalytics: UA-154749084-1
+navbar:
+  type: inverse
