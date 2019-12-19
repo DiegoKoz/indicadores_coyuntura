@@ -18,7 +18,7 @@ load_all() # para cargar nuestras funciones de R
 
 # Tasa de Ganancia de las Grandes Empresas (Corporate)
 
-### [CPI]((https://beta.bls.gov/dataViewer/view/timeseries/CUSR0000SA0;jsessionid=993AA0F88EC37E868C7BE9DF51C773D6))
+### [CPI](https://beta.bls.gov/dataViewer/view/timeseries/CUSR0000SA0;jsessionid=993AA0F88EC37E868C7BE9DF51C773D6)
 
 
 ```{r echo=TRUE}
