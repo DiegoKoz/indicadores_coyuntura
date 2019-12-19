@@ -13,12 +13,13 @@ library(readr)
 library(ggplot2)
 library(stringi)
 library(devtools)
+library(fs)
 load_all() # para cargar nuestras funciones de R
 ```
 
 # Tasa de Ganancia de las Grandes Empresas (Corporate)
 
-### [CPI]((https://beta.bls.gov/dataViewer/view/timeseries/CUSR0000SA0;jsessionid=993AA0F88EC37E868C7BE9DF51C773D6))
+### [CPI](https://beta.bls.gov/dataViewer/view/timeseries/CUSR0000SA0;jsessionid=993AA0F88EC37E868C7BE9DF51C773D6)
 
 
 ```{r echo=TRUE}
@@ -48,28 +49,15 @@ Links a los distintos años:
 
 * [1998 a 2018](https://apps.bea.gov/iTable/iTable.cfm?reqid=19&step=3&isuri=1&select_all_years=1&nipa_table_list=243&series=q&first_year=2011&scale=-99&last_year=2018&categories=survey&thetable=x)
 
-
 ```{r message=FALSE, warning=FALSE}
-corporate_profits_btaxes_1929_1948 <- read_csv("../data/Table 6.17A. Corporate Profits Before Tax by Industry_1929-1948.csv", skip = 4) %>% 
-  select(-Line) %>%
-  rename(sector = X2) %>%
-  na.omit(corporate_profits_btaxes_1929_1948)   
-  
-corporate_profits_btaxes_1948_1987 <- read_csv("../data/Table 6.17B. Corporate Profits Before Tax by Industry_1948-1987.csv", skip = 4) %>%
-  select(-Line, -"1948") %>%
-  rename(sector = X2) %>%
-  na.omit(corporate_profits_btaxes_1948_1987)
 
-corporate_profits_btaxes_1987_2000 <- read_csv("../data/Table 6.17C. Corporate Profits Before Tax by Industry_1987-2000.csv", skip = 4) %>%
-  select(-Line, -"1987") %>%
-  rename(sector = X2) %>%
-  na.omit(corporate_profits_btaxes_1987_2000)
-
-corporate_profits_btaxes_2000_2018 <- read_csv("../data/Table 6.17D. Corporate Profits Before Tax by Industry_2000-2018.csv", skip = 4) %>%
-  select(-Line, -"2000") %>%
-  rename(sector=X2) %>%
-  na.omit(corporate_profits_btaxes_2000_2018)
-
+corporate_profits_btaxes_1929_1948 <- leer_tablas_bea("../data/Table 6.17A. Corporate Profits Before Tax by Industry_1929-1948.csv")   
+corporate_profits_btaxes_1948_1987 <- leer_tablas_bea("../data/Table 6.17B. Corporate Profits Before Tax by Industry_1948-1987.csv") %>% 
+  select(-"1948") 
+corporate_profits_btaxes_1987_2000 <- leer_tablas_bea("../data/Table 6.17C. Corporate Profits Before Tax by Industry_1987-2000.csv") %>% 
+  select(-"1987")
+corporate_profits_btaxes_2000_2018 <- leer_tablas_bea("../data/Table 6.17D. Corporate Profits Before Tax by Industry_2000-2018.csv") %>%
+  select(-"2000") 
 
 #Unificación de bases
 corporate_profits_unificacion <- corporate_profits_btaxes_1929_1948 %>% 

@@ -103,7 +103,9 @@
 <a class="sourceLine" id="cb1-3" title="3"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span>(tidyverse)</a>
 <a class="sourceLine" id="cb1-4" title="4"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span>(stringr)</a>
 <a class="sourceLine" id="cb1-5" title="5"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span>(lubridate)</a>
-<a class="sourceLine" id="cb1-6" title="6"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span>(imputeTS)</a></code></pre></div>
+<a class="sourceLine" id="cb1-6" title="6"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span>(imputeTS)</a>
+<a class="sourceLine" id="cb1-7" title="7"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span>(devtools)</a>
+<a class="sourceLine" id="cb1-8" title="8"><span class="kw"><a href="https://rdrr.io/pkg/devtools/man/load_all.html">load_all</a></span>()</a></code></pre></div>
 <div id="variables-de-eeuu" class="section level1">
 <h1 class="hasAnchor">
 <a href="#variables-de-eeuu" class="anchor"></a>Variables de EEUU</h1>
@@ -144,52 +146,46 @@
 <div id="creacion-de-fechas-y-cambio-de-base" class="section level4">
 <h4 class="hasAnchor">
 <a href="#creacion-de-fechas-y-cambio-de-base" class="anchor"></a>Creación de fechas y cambio de base</h4>
-<p>Creo una función para calcular números índice</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" title="1">generar_indice &lt;-<span class="st"> </span><span class="cf">function</span>(serie,fecha, fecha_base){</a>
-<a class="sourceLine" id="cb4-2" title="2"></a>
-<a class="sourceLine" id="cb4-3" title="3">  valor_base &lt;-<span class="st"> </span>serie[<span class="kw"><a href="https://rdrr.io/r/base/which.html">which</a></span>(fecha<span class="op">==</span>fecha_base)]</a>
-<a class="sourceLine" id="cb4-4" title="4">  (serie<span class="op">/</span>valor_base)</a>
-<a class="sourceLine" id="cb4-5" title="5">  }</a></code></pre></div>
 </div>
 <div id="empleo" class="section level4">
 <h4 class="hasAnchor">
 <a href="#empleo" class="anchor"></a>Empleo</h4>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" title="1"><span class="co">###Empleo </span></a>
-<a class="sourceLine" id="cb5-2" title="2">employ_us &lt;-<span class="st"> </span>base_employ_us <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb5-3" title="3"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">mes  =</span> <span class="kw"><a href="https://stringr.tidyverse.org/reference/str_remove.html">str_remove</a></span>(base_employ_us<span class="op">$</span>Period, <span class="st">"M"</span>),</a>
-<a class="sourceLine" id="cb5-4" title="4">         <span class="dt">fecha =</span> <span class="kw"><a href="http://lubridate.tidyverse.org/reference/parse_date_time.html">parse_date_time</a></span>(<span class="kw"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span>(Year, mes), <span class="dt">orders =</span> <span class="st">"ym"</span>),</a>
-<a class="sourceLine" id="cb5-5" title="5">         <span class="dt">fecha =</span> <span class="kw"><a href="http://lubridate.tidyverse.org/reference/ymd.html">ymd</a></span>(fecha),</a>
-<a class="sourceLine" id="cb5-6" title="6">         <span class="dt">i_empleo_us=</span><span class="kw"><a href="../reference/generar_indice.html">generar_indice</a></span>(<span class="dt">serie =</span> Value,</a>
-<a class="sourceLine" id="cb5-7" title="7">                                    <span class="dt">fecha =</span> fecha,</a>
-<a class="sourceLine" id="cb5-8" title="8">                                    <span class="dt">fecha_base =</span> <span class="st">"2017-01-01"</span>)) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb5-9" title="9"><span class="st">  </span><span class="kw">select</span>(fecha, i_empleo_us)</a></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" title="1"><span class="co">###Empleo </span></a>
+<a class="sourceLine" id="cb4-2" title="2">employ_us &lt;-<span class="st"> </span>base_employ_us <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb4-3" title="3"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">mes  =</span> <span class="kw"><a href="https://stringr.tidyverse.org/reference/str_remove.html">str_remove</a></span>(base_employ_us<span class="op">$</span>Period, <span class="st">"M"</span>),</a>
+<a class="sourceLine" id="cb4-4" title="4">         <span class="dt">fecha =</span> <span class="kw"><a href="http://lubridate.tidyverse.org/reference/parse_date_time.html">parse_date_time</a></span>(<span class="kw"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span>(Year, mes), <span class="dt">orders =</span> <span class="st">"ym"</span>),</a>
+<a class="sourceLine" id="cb4-5" title="5">         <span class="dt">fecha =</span> <span class="kw"><a href="http://lubridate.tidyverse.org/reference/ymd.html">ymd</a></span>(fecha),</a>
+<a class="sourceLine" id="cb4-6" title="6">         <span class="dt">i_empleo_us=</span><span class="kw"><a href="../reference/generar_indice.html">generar_indice</a></span>(<span class="dt">serie =</span> Value,</a>
+<a class="sourceLine" id="cb4-7" title="7">                                    <span class="dt">fecha =</span> fecha,</a>
+<a class="sourceLine" id="cb4-8" title="8">                                    <span class="dt">fecha_base =</span> <span class="st">"2017-01-01"</span>)) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb4-9" title="9"><span class="st">  </span><span class="kw">select</span>(fecha, i_empleo_us)</a></code></pre></div>
 </div>
 <div id="produccion" class="section level4">
 <h4 class="hasAnchor">
 <a href="#produccion" class="anchor"></a>Produccion</h4>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb6-1" title="1"><span class="co">### Producción </span></a>
-<a class="sourceLine" id="cb6-2" title="2">manuf_us &lt;-<span class="st">  </span>base_manuf_us <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb6-3" title="3"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">fecha =</span> DATE,</a>
-<a class="sourceLine" id="cb6-4" title="4">         <span class="dt">i_manuf_us=</span><span class="kw"><a href="../reference/generar_indice.html">generar_indice</a></span>(<span class="dt">serie =</span> IPGMFSQ,</a>
-<a class="sourceLine" id="cb6-5" title="5">                                    <span class="dt">fecha =</span> fecha,</a>
-<a class="sourceLine" id="cb6-6" title="6">                                    <span class="dt">fecha_base =</span> <span class="st">"2017-01-01"</span>)) <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb6-7" title="7"><span class="st">  </span><span class="kw">select</span>(fecha, i_manuf_us)</a></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" title="1"><span class="co">### Producción </span></a>
+<a class="sourceLine" id="cb5-2" title="2">manuf_us &lt;-<span class="st">  </span>base_manuf_us <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb5-3" title="3"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">fecha =</span> DATE,</a>
+<a class="sourceLine" id="cb5-4" title="4">         <span class="dt">i_manuf_us=</span><span class="kw"><a href="../reference/generar_indice.html">generar_indice</a></span>(<span class="dt">serie =</span> IPGMFSQ,</a>
+<a class="sourceLine" id="cb5-5" title="5">                                    <span class="dt">fecha =</span> fecha,</a>
+<a class="sourceLine" id="cb5-6" title="6">                                    <span class="dt">fecha_base =</span> <span class="st">"2017-01-01"</span>)) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb5-7" title="7"><span class="st">  </span><span class="kw">select</span>(fecha, i_manuf_us)</a></code></pre></div>
 </div>
 <div id="union-de-las-bases-y-calculo-de-productividad" class="section level3">
 <h3 class="hasAnchor">
 <a href="#union-de-las-bases-y-calculo-de-productividad" class="anchor"></a>Union de las bases y cálculo de productividad</h3>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" title="1">productividad_us &lt;-<span class="st"> </span>employ_us <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb7-2" title="2"><span class="st">  </span><span class="kw">left_join</span>(manuf_us, <span class="dt">by =</span> <span class="st">"fecha"</span>) <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb7-3" title="3"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">i_productividad_us =</span> i_manuf_us<span class="op">/</span>i_empleo_us) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb7-4" title="4"><span class="st">  </span><span class="kw">select</span>(fecha, i_productividad_us) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb7-5" title="5"><span class="st">  </span><span class="kw"><a href="https://rdrr.io/r/stats/filter.html">filter</a></span>(fecha <span class="op">&gt;=</span><span class="st"> "1972-01-01"</span>)</a>
-<a class="sourceLine" id="cb7-6" title="6"></a>
-<a class="sourceLine" id="cb7-7" title="7"></a>
-<a class="sourceLine" id="cb7-8" title="8">productividad_us &lt;-<span class="st"> </span>productividad_us <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb7-9" title="9"><span class="co">#agrego todos los meses</span></a>
-<a class="sourceLine" id="cb7-10" title="10"><span class="st">  </span><span class="kw">complete</span>(<span class="dt">fecha =</span> <span class="kw"><a href="https://rdrr.io/r/base/seq.Date.html">seq.Date</a></span>(<span class="kw"><a href="https://rdrr.io/r/base/Extremes.html">min</a></span>(fecha), <span class="kw"><a href="https://rdrr.io/r/base/Extremes.html">max</a></span>(fecha), <span class="dt">by=</span><span class="st">"month"</span>)) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb7-11" title="11"><span class="co">#imputo</span></a>
-<a class="sourceLine" id="cb7-12" title="12"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">i_productividad_us =</span> <span class="kw"><a href="https://SteffenMoritz.github.io/imputeTS/reference/na_interpolation.html">na_interpolation</a></span>(i_productividad_us,<span class="dt">option =</span> <span class="st">'linear'</span>))</a></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb6-1" title="1">productividad_us &lt;-<span class="st"> </span>employ_us <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb6-2" title="2"><span class="st">  </span><span class="kw">left_join</span>(manuf_us, <span class="dt">by =</span> <span class="st">"fecha"</span>) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb6-3" title="3"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">i_productividad_us =</span> i_manuf_us<span class="op">/</span>i_empleo_us) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb6-4" title="4"><span class="st">  </span><span class="kw">select</span>(fecha, i_productividad_us) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb6-5" title="5"><span class="st">  </span><span class="kw"><a href="https://rdrr.io/r/stats/filter.html">filter</a></span>(fecha <span class="op">&gt;=</span><span class="st"> "1972-01-01"</span>)</a>
+<a class="sourceLine" id="cb6-6" title="6"></a>
+<a class="sourceLine" id="cb6-7" title="7"></a>
+<a class="sourceLine" id="cb6-8" title="8">productividad_us &lt;-<span class="st"> </span>productividad_us <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb6-9" title="9"><span class="co">#agrego todos los meses</span></a>
+<a class="sourceLine" id="cb6-10" title="10"><span class="st">  </span><span class="kw">complete</span>(<span class="dt">fecha =</span> <span class="kw"><a href="https://rdrr.io/r/base/seq.Date.html">seq.Date</a></span>(<span class="kw"><a href="https://rdrr.io/r/base/Extremes.html">min</a></span>(fecha), <span class="kw"><a href="https://rdrr.io/r/base/Extremes.html">max</a></span>(fecha), <span class="dt">by=</span><span class="st">"month"</span>)) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb6-11" title="11"><span class="co">#imputo</span></a>
+<a class="sourceLine" id="cb6-12" title="12"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">i_productividad_us =</span> <span class="kw"><a href="https://SteffenMoritz.github.io/imputeTS/reference/na_interpolation.html">na_interpolation</a></span>(i_productividad_us,<span class="dt">option =</span> <span class="st">'linear'</span>))</a></code></pre></div>
 </div>
 </div>
 <div id="indice-de-precios-al-consumidor" class="section level2">
@@ -208,7 +204,7 @@
 <li>Observaciones: todos los ítems; promedio de las ciudades de EEUU</li>
 <li>ID serie: CUSR0000SA0</li>
 </ul>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb8-1" title="1">base_ipc_us &lt;-<span class="st"> </span><span class="kw"><a href="https://readr.tidyverse.org/reference/read_delim.html">read_csv</a></span>(<span class="st">"../data/cpi.csv"</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" title="1">base_ipc_us &lt;-<span class="st"> </span><span class="kw"><a href="https://readr.tidyverse.org/reference/read_delim.html">read_csv</a></span>(<span class="st">"../data/cpi.csv"</span>)</a></code></pre></div>
 <pre><code>## Parsed with column specification:
 ## cols(
 ##   `Series ID` = col_character(),
@@ -217,13 +213,13 @@
 ##   Label = col_character(),
 ##   Value = col_double()
 ## )</code></pre>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb10-1" title="1">ipc_us &lt;-<span class="st"> </span>base_ipc_us <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb10-2" title="2"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">mes =</span> <span class="kw"><a href="https://rdrr.io/r/base/double.html">as.double</a></span>(<span class="kw"><a href="https://stringr.tidyverse.org/reference/str_remove.html">str_remove</a></span>(base_ipc_us<span class="op">$</span>Period, <span class="st">"M"</span>)),</a>
-<a class="sourceLine" id="cb10-3" title="3">         <span class="dt">fecha =</span> <span class="kw"><a href="http://lubridate.tidyverse.org/reference/ymd.html">ymd</a></span>(<span class="kw"><a href="http://lubridate.tidyverse.org/reference/parse_date_time.html">parse_date_time</a></span>(<span class="kw"><a href="https://rdrr.io/r/base/paste.html">paste</a></span>(Year, mes, <span class="dt">sep =</span> <span class="st">""</span>), <span class="dt">orders =</span> <span class="st">"ym"</span>)),</a>
-<a class="sourceLine" id="cb10-4" title="4">         <span class="dt">i_ipc_us=</span><span class="kw"><a href="../reference/generar_indice.html">generar_indice</a></span>(<span class="dt">serie =</span> Value,</a>
-<a class="sourceLine" id="cb10-5" title="5">                                    <span class="dt">fecha =</span> fecha,</a>
-<a class="sourceLine" id="cb10-6" title="6">                                    <span class="dt">fecha_base =</span> <span class="st">"2017-01-01"</span>)) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb10-7" title="7"><span class="st">  </span><span class="kw">select</span>(fecha, i_ipc_us) </a></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb9-1" title="1">ipc_us &lt;-<span class="st"> </span>base_ipc_us <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb9-2" title="2"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">mes =</span> <span class="kw"><a href="https://rdrr.io/r/base/double.html">as.double</a></span>(<span class="kw"><a href="https://stringr.tidyverse.org/reference/str_remove.html">str_remove</a></span>(base_ipc_us<span class="op">$</span>Period, <span class="st">"M"</span>)),</a>
+<a class="sourceLine" id="cb9-3" title="3">         <span class="dt">fecha =</span> <span class="kw"><a href="http://lubridate.tidyverse.org/reference/ymd.html">ymd</a></span>(<span class="kw"><a href="http://lubridate.tidyverse.org/reference/parse_date_time.html">parse_date_time</a></span>(<span class="kw"><a href="https://rdrr.io/r/base/paste.html">paste</a></span>(Year, mes, <span class="dt">sep =</span> <span class="st">""</span>), <span class="dt">orders =</span> <span class="st">"ym"</span>)),</a>
+<a class="sourceLine" id="cb9-4" title="4">         <span class="dt">i_ipc_us=</span><span class="kw"><a href="../reference/generar_indice.html">generar_indice</a></span>(<span class="dt">serie =</span> Value,</a>
+<a class="sourceLine" id="cb9-5" title="5">                                    <span class="dt">fecha =</span> fecha,</a>
+<a class="sourceLine" id="cb9-6" title="6">                                    <span class="dt">fecha_base =</span> <span class="st">"2017-01-01"</span>)) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb9-7" title="7"><span class="st">  </span><span class="kw">select</span>(fecha, i_ipc_us) </a></code></pre></div>
 </div>
 </div>
 </div>
@@ -238,77 +234,76 @@
 <a href="#metodologia-de-valor-agregado---indec" class="anchor"></a><a href="https://www.indec.gob.ar/ftp/cuadros/economia/metodologia_21_cuentas_nacionales.pdf">Metodología de Valor Agregado - INDEC</a>
 </h4>
 <p><a href="https://datos.gob.ar/dataset/sspm-producto-interno-bruto-precios-mercado---valor-agregado-bruto-precios-productor-base-1993">Valor agregado bruto sectorial a precios de productor en pesos constantes de 1993</a></p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb11-1" title="1"><span class="co"># b_va93 &lt;- read_csv("../data/producto-interno-bruto-valores-trimestrales-base-1993.csv")</span></a></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb10-1" title="1"><span class="co"># b_va93 &lt;- read_csv("../data/producto-interno-bruto-valores-trimestrales-base-1993.csv")</span></a></code></pre></div>
 </div>
 <div id="valor-agregado-bruto-a-precios-basicos-por-rama-de-actividad-economica-en-millones-de-pesos-a-precios-corrientes--base-2004" class="section level4">
 <h4 class="hasAnchor">
 <a href="#valor-agregado-bruto-a-precios-basicos-por-rama-de-actividad-economica-en-millones-de-pesos-a-precios-corrientes--base-2004" class="anchor"></a><a href="https://datos.gob.ar/dataset/sspm-valor-agregado-bruto-precios-basicos-por-rama-actividad-economica">Valor Agregado Bruto a precios básicos por rama de actividad económica en millones de pesos a precios corrientes. Base 2004</a>
 </h4>
-<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb12-1" title="1">base_manuf_arg04 &lt;-<span class="st"> </span><span class="kw"><a href="https://readr.tidyverse.org/reference/read_delim.html">read_csv</a></span>(<span class="st">"../data/va_p_ctes_arg.csv"</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb11-1" title="1">base_manuf_arg04 &lt;-<span class="st"> </span><span class="kw"><a href="https://readr.tidyverse.org/reference/read_delim.html">read_csv</a></span>(<span class="st">"../data/va_p_ctes_arg.csv"</span>)</a></code></pre></div>
 <pre><code>## Parsed with column specification:
 ## cols(
 ##   .default = col_double(),
 ##   indice_tiempo = col_date(format = "")
 ## )</code></pre>
 <pre><code>## See spec(...) for full column specifications.</code></pre>
-<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb15-1" title="1">manuf_arg &lt;-<span class="st"> </span>base_manuf_arg04 <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb15-2" title="2"><span class="st">  </span><span class="kw">select</span>(<span class="dt">fecha=</span>indice_tiempo, industria_manufacturera_total) <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb15-3" title="3"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">i_manuf_arg =</span> <span class="kw"><a href="../reference/generar_indice.html">generar_indice</a></span>(<span class="dt">serie =</span> industria_manufacturera_total,</a>
-<a class="sourceLine" id="cb15-4" title="4">                                    <span class="dt">fecha =</span> fecha,</a>
-<a class="sourceLine" id="cb15-5" title="5">                                    <span class="dt">fecha_base =</span> <span class="st">"2017-01-01"</span>)) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb15-6" title="6"><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span>industria_manufacturera_total)</a></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb14-1" title="1">manuf_arg &lt;-<span class="st"> </span>base_manuf_arg04 <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb14-2" title="2"><span class="st">  </span><span class="kw">select</span>(<span class="dt">fecha=</span>indice_tiempo, industria_manufacturera_total) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb14-3" title="3"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">fecha =</span> <span class="kw"><a href="http://lubridate.tidyverse.org/reference/quarter.html">quarter</a></span>(fecha,<span class="dt">with_year =</span> T),</a>
+<a class="sourceLine" id="cb14-4" title="4">    <span class="dt">i_manuf_arg =</span> <span class="kw"><a href="../reference/generar_indice.html">generar_indice</a></span>(<span class="dt">serie =</span> industria_manufacturera_total,</a>
+<a class="sourceLine" id="cb14-5" title="5">                                    <span class="dt">fecha =</span> fecha,</a>
+<a class="sourceLine" id="cb14-6" title="6">                                    <span class="dt">fecha_base =</span> <span class="st">"2017.1"</span>)) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb14-7" title="7"><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span>industria_manufacturera_total)</a></code></pre></div>
 </div>
 <div id="empleo-1" class="section level4">
 <h4 class="hasAnchor">
 <a href="#empleo-1" class="anchor"></a>Empleo</h4>
-<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb16-1" title="1">empleo_nacional_serie_trimestral &lt;-<span class="st"> </span><span class="kw"><a href="https://readxl.tidyverse.org/reference/read_excel.html">read_excel</a></span>(<span class="st">"../data/empleo_arg.xlsx"</span>, </a>
-<a class="sourceLine" id="cb16-2" title="2">                                               <span class="dt">sheet =</span> <span class="st">"C2.2"</span>, <span class="dt">skip =</span> <span class="dv">2</span>, <span class="dt">n_max =</span> <span class="dv">93</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb16-3" title="3"><span class="st">  </span><span class="kw">rename</span>( <span class="dt">periodo =</span> <span class="st">"Período"</span>,</a>
-<a class="sourceLine" id="cb16-4" title="4">          <span class="dt">empleo_arg =</span> <span class="st">"Industria"</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb16-5" title="5"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">cuatri =</span> <span class="kw"><a href="https://rdrr.io/r/base/double.html">as.double</a></span>(<span class="kw"><a href="https://stringr.tidyverse.org/reference/str_sub.html">str_sub</a></span>(periodo, <span class="dv">1</span>, <span class="dv">1</span>)),</a>
-<a class="sourceLine" id="cb16-6" title="6">         <span class="dt">anio =</span> <span class="kw"><a href="https://rdrr.io/r/base/double.html">as.double</a></span>(<span class="kw"><a href="https://stringr.tidyverse.org/reference/str_sub.html">str_sub</a></span>(periodo, <span class="dv">9</span>, <span class="dv">13</span>)),</a>
-<a class="sourceLine" id="cb16-7" title="7">         <span class="dt">mes =</span> <span class="kw">case_when</span>(cuatri <span class="op">==</span><span class="st"> </span><span class="dv">1</span> <span class="op">~</span><span class="st"> </span><span class="dv">1</span>,</a>
-<a class="sourceLine" id="cb16-8" title="8">                         cuatri <span class="op">==</span><span class="st"> </span><span class="dv">2</span> <span class="op">~</span><span class="st"> </span><span class="dv">4</span>,</a>
-<a class="sourceLine" id="cb16-9" title="9">                         cuatri <span class="op">==</span><span class="st"> </span><span class="dv">3</span> <span class="op">~</span><span class="st"> </span><span class="dv">7</span>,</a>
-<a class="sourceLine" id="cb16-10" title="10">                         cuatri <span class="op">==</span><span class="st"> </span><span class="dv">4</span> <span class="op">~</span><span class="st"> </span><span class="dv">12</span>),</a>
-<a class="sourceLine" id="cb16-11" title="11">         <span class="dt">fecha =</span> <span class="kw"><a href="http://lubridate.tidyverse.org/reference/as_date.html">as_date</a></span>(<span class="kw"><a href="http://lubridate.tidyverse.org/reference/parse_date_time.html">parse_date_time</a></span>(<span class="kw"><a href="https://rdrr.io/r/base/paste.html">paste</a></span>(anio, mes, <span class="dt">sep =</span> <span class="st">"-"</span>), <span class="dt">orders =</span> <span class="st">"ym"</span>))) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb16-12" title="12"><span class="st">  </span><span class="kw">select</span>(fecha, empleo_arg)</a>
-<a class="sourceLine" id="cb16-13" title="13"></a>
-<a class="sourceLine" id="cb16-14" title="14">empleo_arg &lt;-<span class="st">  </span>empleo_nacional_serie_trimestral <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb16-15" title="15"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">i_empleo_arg =</span> <span class="kw"><a href="../reference/generar_indice.html">generar_indice</a></span>(<span class="dt">serie =</span> empleo_arg,</a>
-<a class="sourceLine" id="cb16-16" title="16">                                    <span class="dt">fecha =</span> fecha,</a>
-<a class="sourceLine" id="cb16-17" title="17">                                    <span class="dt">fecha_base =</span> <span class="st">"2017-01-01"</span>)) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb16-18" title="18"><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span>empleo_arg) <span class="co">#buscar otra variable empleo, con mayor actualizacion (EPH por ej)</span></a>
-<a class="sourceLine" id="cb16-19" title="19">empleo_arg</a></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb15-1" title="1">empleo_nacional_serie_trimestral &lt;-<span class="st"> </span><span class="kw"><a href="https://readxl.tidyverse.org/reference/read_excel.html">read_excel</a></span>(<span class="st">"../data/empleo_arg.xlsx"</span>, </a>
+<a class="sourceLine" id="cb15-2" title="2">                                               <span class="dt">sheet =</span> <span class="st">"C2.2"</span>, <span class="dt">skip =</span> <span class="dv">2</span>, <span class="dt">n_max =</span> <span class="dv">93</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb15-3" title="3"><span class="st">  </span><span class="kw">rename</span>( <span class="dt">periodo =</span> <span class="st">"Período"</span>,</a>
+<a class="sourceLine" id="cb15-4" title="4">          <span class="dt">empleo_arg =</span> <span class="st">"Industria"</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb15-5" title="5"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">cuatri =</span> <span class="kw"><a href="https://rdrr.io/r/base/double.html">as.double</a></span>(<span class="kw"><a href="https://stringr.tidyverse.org/reference/str_sub.html">str_sub</a></span>(periodo, <span class="dv">1</span>, <span class="dv">1</span>)),</a>
+<a class="sourceLine" id="cb15-6" title="6">         <span class="dt">anio =</span> <span class="kw"><a href="https://rdrr.io/r/base/double.html">as.double</a></span>(<span class="kw"><a href="https://stringr.tidyverse.org/reference/str_sub.html">str_sub</a></span>(periodo, <span class="dv">9</span>, <span class="dv">13</span>)),</a>
+<a class="sourceLine" id="cb15-7" title="7">         <span class="dt">fecha =</span> <span class="kw"><a href="https://rdrr.io/r/base/numeric.html">as.numeric</a></span>(glue<span class="op">::</span><span class="kw"><a href="https://rdrr.io/pkg/glue/man/glue.html">glue</a></span>(<span class="st">'{anio}.{cuatri}'</span>))) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb15-8" title="8"><span class="st">  </span><span class="kw">select</span>(fecha, empleo_arg)</a>
+<a class="sourceLine" id="cb15-9" title="9"></a>
+<a class="sourceLine" id="cb15-10" title="10">empleo_arg &lt;-<span class="st">  </span>empleo_nacional_serie_trimestral <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb15-11" title="11"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">i_empleo_arg =</span> <span class="kw"><a href="../reference/generar_indice.html">generar_indice</a></span>(<span class="dt">serie =</span> empleo_arg,</a>
+<a class="sourceLine" id="cb15-12" title="12">                                    <span class="dt">fecha =</span> fecha,</a>
+<a class="sourceLine" id="cb15-13" title="13">                                    <span class="dt">fecha_base =</span> <span class="st">"2017.1"</span>)) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb15-14" title="14"><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span>empleo_arg) <span class="co">#buscar otra variable empleo, con mayor actualizacion (EPH por ej)</span></a>
+<a class="sourceLine" id="cb15-15" title="15">empleo_arg</a></code></pre></div>
 <pre><code>## # A tibble: 93 x 2
-##    fecha      i_empleo_arg
-##    &lt;date&gt;            &lt;dbl&gt;
-##  1 1996-01-01        0.709
-##  2 1996-04-01        0.716
-##  3 1996-07-01        0.725
-##  4 1996-12-01        0.732
-##  5 1997-01-01        0.740
-##  6 1997-04-01        0.751
-##  7 1997-07-01        0.755
-##  8 1997-12-01        0.762
-##  9 1998-01-01        0.765
-## 10 1998-04-01        0.769
+##    fecha i_empleo_arg
+##    &lt;dbl&gt;        &lt;dbl&gt;
+##  1 1996.        0.709
+##  2 1996.        0.716
+##  3 1996.        0.725
+##  4 1996.        0.732
+##  5 1997.        0.740
+##  6 1997.        0.751
+##  7 1997.        0.755
+##  8 1997.        0.762
+##  9 1998.        0.765
+## 10 1998.        0.769
 ## # … with 83 more rows</code></pre>
 </div>
 <div id="productividad" class="section level3">
 <h3 class="hasAnchor">
 <a href="#productividad" class="anchor"></a>Productividad</h3>
-<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb18-1" title="1">productividad_arg &lt;-<span class="st"> </span>empleo_arg <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb18-2" title="2"><span class="st">  </span><span class="kw">left_join</span>(manuf_arg, <span class="dt">by =</span> <span class="st">"fecha"</span>) <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb18-3" title="3"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">i_productividad_arg =</span> i_manuf_arg<span class="op">/</span>i_empleo_arg) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb18-4" title="4"><span class="st">  </span><span class="kw"><a href="https://rdrr.io/r/stats/filter.html">filter</a></span>(fecha <span class="op">&gt;=</span><span class="st"> "2004-01-01"</span>) <span class="op">%&gt;%</span><span class="st">  </span></a>
-<a class="sourceLine" id="cb18-5" title="5"><span class="st">  </span><span class="kw">select</span>(fecha, i_productividad_arg)</a>
-<a class="sourceLine" id="cb18-6" title="6"></a>
-<a class="sourceLine" id="cb18-7" title="7"><span class="co">#agrego todos los meses</span></a>
-<a class="sourceLine" id="cb18-8" title="8">productividad_arg &lt;-<span class="st"> </span>productividad_arg <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb18-9" title="9"><span class="st">  </span><span class="kw">complete</span>(<span class="dt">fecha =</span> <span class="kw"><a href="https://rdrr.io/r/base/seq.Date.html">seq.Date</a></span>(<span class="kw"><a href="https://rdrr.io/r/base/Extremes.html">min</a></span>(fecha), <span class="kw"><a href="https://rdrr.io/r/base/Extremes.html">max</a></span>(fecha), <span class="dt">by=</span><span class="st">"month"</span>)) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb18-10" title="10"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">i_productividad_arg =</span> <span class="kw"><a href="https://SteffenMoritz.github.io/imputeTS/reference/na_interpolation.html">na_interpolation</a></span>(i_productividad_arg,<span class="dt">option =</span> <span class="st">'linear'</span>)) <span class="co">#Revisar si se puede ajustar con el IPI industrial del INDEC o FIEL</span></a>
-<a class="sourceLine" id="cb18-11" title="11">productividad_arg</a></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb17-1" title="1">productividad_arg &lt;-<span class="st"> </span>empleo_arg <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb17-2" title="2"><span class="st">  </span><span class="kw">full_join</span>(manuf_arg, <span class="dt">by =</span> <span class="st">"fecha"</span>) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb17-3" title="3"><span class="st">  </span><span class="kw">mutate</span>( <span class="co">#i_empleo_arg = imputeTS::na_locf(i_empleo_arg),</span></a>
+<a class="sourceLine" id="cb17-4" title="4">    <span class="dt">i_productividad_arg =</span> i_manuf_arg<span class="op">/</span>i_empleo_arg) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb17-5" title="5"><span class="st">  </span><span class="kw"><a href="https://rdrr.io/r/stats/filter.html">filter</a></span>(<span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/NA.html">is.na</a></span>(i_productividad_arg)) <span class="op">%&gt;%</span><span class="st">  </span></a>
+<a class="sourceLine" id="cb17-6" title="6"><span class="st">  </span><span class="kw">select</span>(fecha, i_productividad_arg)</a>
+<a class="sourceLine" id="cb17-7" title="7"></a>
+<a class="sourceLine" id="cb17-8" title="8"><span class="co">#agrego todos los meses</span></a>
+<a class="sourceLine" id="cb17-9" title="9">productividad_arg &lt;-<span class="st"> </span>productividad_arg <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb17-10" title="10"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">fecha =</span> lubridate<span class="op">::</span><span class="kw"><a href="http://lubridate.tidyverse.org/reference/ymd.html">yq</a></span>(fecha)) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb17-11" title="11"><span class="st">  </span><span class="kw">complete</span>(<span class="dt">fecha =</span> <span class="kw"><a href="https://rdrr.io/r/base/seq.Date.html">seq.Date</a></span>(<span class="kw"><a href="https://rdrr.io/r/base/Extremes.html">min</a></span>(fecha), <span class="kw"><a href="https://rdrr.io/r/base/Extremes.html">max</a></span>(fecha), <span class="dt">by=</span><span class="st">"month"</span>)) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb17-12" title="12"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">i_productividad_arg =</span> <span class="kw"><a href="https://SteffenMoritz.github.io/imputeTS/reference/na_interpolation.html">na_interpolation</a></span>(i_productividad_arg,<span class="dt">option =</span> <span class="st">'linear'</span>)) <span class="co">#Revisar si se puede ajustar con el IPI industrial del INDEC o FIEL</span></a>
+<a class="sourceLine" id="cb17-13" title="13">productividad_arg</a></code></pre></div>
 <pre><code>## # A tibble: 181 x 2
 ##    fecha      i_productividad_arg
 ##    &lt;date&gt;                   &lt;dbl&gt;
@@ -319,61 +314,61 @@
 ##  5 2004-05-01                1.20
 ##  6 2004-06-01                1.20
 ##  7 2004-07-01                1.20
-##  8 2004-08-01                1.19
-##  9 2004-09-01                1.17
-## 10 2004-10-01                1.16
+##  8 2004-08-01                1.20
+##  9 2004-09-01                1.19
+## 10 2004-10-01                1.19
 ## # … with 171 more rows</code></pre>
 </div>
 </div>
 <div id="indice-de-precios-al-consumidor-1" class="section level2">
 <h2 class="hasAnchor">
 <a href="#indice-de-precios-al-consumidor-1" class="anchor"></a>Índice de precios al consumidor</h2>
-<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb20-1" title="1">ipc_arg &lt;-<span class="st"> </span><span class="kw"><a href="https://readxl.tidyverse.org/reference/read_excel.html">read_excel</a></span>(<span class="st">"../data/ipc_arg.xlsx"</span>, </a>
-<a class="sourceLine" id="cb20-2" title="2">    <span class="dt">col_types =</span> <span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"date"</span>, <span class="st">"numeric"</span>, <span class="st">"numeric"</span>)) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb20-3" title="3"><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span>ipc9_ene06) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb20-4" title="4"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">fecha =</span> <span class="kw"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span>(fecha)) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb20-5" title="5"><span class="st">  </span><span class="kw">rename</span>(<span class="dt">i_ipc9 =</span> ipc9_<span class="dv">17</span>) <span class="co">#Revisar si se puede construir el ipc con las bases crudas </span></a></code></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb19-1" title="1">ipc_arg &lt;-<span class="st"> </span><span class="kw"><a href="https://readxl.tidyverse.org/reference/read_excel.html">read_excel</a></span>(<span class="st">"../data/ipc_arg.xlsx"</span>, </a>
+<a class="sourceLine" id="cb19-2" title="2">    <span class="dt">col_types =</span> <span class="kw"><a href="https://rdrr.io/r/base/c.html">c</a></span>(<span class="st">"date"</span>, <span class="st">"numeric"</span>, <span class="st">"numeric"</span>)) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb19-3" title="3"><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span>ipc9_ene06) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb19-4" title="4"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">fecha =</span> <span class="kw"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span>(fecha)) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb19-5" title="5"><span class="st">  </span><span class="kw">rename</span>(<span class="dt">i_ipc9 =</span> ipc9_<span class="dv">17</span>) <span class="co">#Revisar si se puede construir el ipc con las bases crudas </span></a></code></pre></div>
 <div id="tipo-de-cambio" class="section level4">
 <h4 class="hasAnchor">
 <a href="#tipo-de-cambio" class="anchor"></a>Tipo de Cambio</h4>
-<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb21-1" title="1">tc_dia_bcra &lt;-<span class="st"> </span><span class="kw"><a href="https://readxl.tidyverse.org/reference/read_excel.html">read_excel</a></span>(<span class="st">"../data/com3500.xls"</span>, </a>
-<a class="sourceLine" id="cb21-2" title="2">                <span class="dt">skip =</span> <span class="dv">2</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb21-3" title="3"><span class="st">  </span><span class="kw">select</span>(<span class="dt">fecha =</span> Fecha,</a>
-<a class="sourceLine" id="cb21-4" title="4">         <span class="dt">tc =</span> <span class="st">"Tipo de Cambio de Referencia - en Pesos - por Dólar")</span></a></code></pre></div>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb20-1" title="1">tc_dia_bcra &lt;-<span class="st"> </span><span class="kw"><a href="https://readxl.tidyverse.org/reference/read_excel.html">read_excel</a></span>(<span class="st">"../data/com3500.xls"</span>, </a>
+<a class="sourceLine" id="cb20-2" title="2">                <span class="dt">skip =</span> <span class="dv">2</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb20-3" title="3"><span class="st">  </span><span class="kw">select</span>(<span class="dt">fecha =</span> Fecha,</a>
+<a class="sourceLine" id="cb20-4" title="4">         <span class="dt">tc =</span> <span class="st">"Tipo de Cambio de Referencia - en Pesos - por Dólar")</span></a></code></pre></div>
 <pre><code>## New names:
 ## * `` -&gt; ...3</code></pre>
-<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb23-1" title="1">tc_mensual &lt;-<span class="st"> </span>tc_dia_bcra <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb23-2" title="2"><span class="st"> </span><span class="kw">group_by</span>(<span class="dt">fecha=</span><span class="kw"><a href="http://lubridate.tidyverse.org/reference/round_date.html">floor_date</a></span>(fecha, <span class="st">"month"</span>)) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb23-3" title="3"><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">tc_promedio_mes =</span> <span class="kw"><a href="https://rdrr.io/r/base/mean.html">mean</a></span>(tc)) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb23-4" title="4"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">fecha=</span><span class="kw"><a href="http://lubridate.tidyverse.org/reference/date.html">date</a></span>(fecha)) <span class="co">#armar una nueva variable con TC a fin de mes</span></a>
-<a class="sourceLine" id="cb23-5" title="5"></a>
-<a class="sourceLine" id="cb23-6" title="6"><span class="co">#promedios 59-72</span></a>
-<a class="sourceLine" id="cb23-7" title="7">promedios_<span class="dv">59</span>_<span class="dv">72</span> &lt;-<span class="st"> </span><span class="kw"><a href="https://readr.tidyverse.org/reference/read_delim.html">read_csv</a></span>(<span class="st">"../data/promedios_59_72.txt"</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">spread</span>(variable,valor)</a></code></pre></div>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb22-1" title="1">tc_mensual &lt;-<span class="st"> </span>tc_dia_bcra <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb22-2" title="2"><span class="st"> </span><span class="kw">group_by</span>(<span class="dt">fecha=</span><span class="kw"><a href="http://lubridate.tidyverse.org/reference/round_date.html">floor_date</a></span>(fecha, <span class="st">"month"</span>)) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb22-3" title="3"><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">tc_promedio_mes =</span> <span class="kw"><a href="https://rdrr.io/r/base/mean.html">mean</a></span>(tc)) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb22-4" title="4"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">fecha=</span><span class="kw"><a href="http://lubridate.tidyverse.org/reference/date.html">date</a></span>(fecha)) <span class="co">#armar una nueva variable con TC a fin de mes</span></a>
+<a class="sourceLine" id="cb22-5" title="5"></a>
+<a class="sourceLine" id="cb22-6" title="6"><span class="co">#promedios 59-72</span></a>
+<a class="sourceLine" id="cb22-7" title="7">promedios_<span class="dv">59</span>_<span class="dv">72</span> &lt;-<span class="st"> </span><span class="kw"><a href="https://readr.tidyverse.org/reference/read_delim.html">read_csv</a></span>(<span class="st">"../data/promedios_59_72.txt"</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">spread</span>(variable,valor)</a></code></pre></div>
 <pre><code>## Parsed with column specification:
 ## cols(
 ##   variable = col_character(),
 ##   valor = col_double()
 ## )</code></pre>
-<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb25-1" title="1"><span class="co"># options (scipen = 999)</span></a></code></pre></div>
+<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb24-1" title="1"><span class="co"># options (scipen = 999)</span></a></code></pre></div>
 </div>
 </div>
 <div id="tcp" class="section level2">
 <h2 class="hasAnchor">
 <a href="#tcp" class="anchor"></a>TCP</h2>
-<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb26-1" title="1">tcp &lt;-<span class="st"> </span>tc_mensual <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb26-2" title="2"><span class="st">  </span><span class="kw">left_join</span>(productividad_us, <span class="dt">by =</span> <span class="st">"fecha"</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb26-3" title="3"><span class="st">  </span><span class="kw">left_join</span>(ipc_us, <span class="dt">by =</span> <span class="st">"fecha"</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb26-4" title="4"><span class="st">  </span><span class="kw">left_join</span>(productividad_arg, <span class="dt">by =</span> <span class="st">"fecha"</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb26-5" title="5"><span class="st">  </span><span class="kw">left_join</span>(ipc_arg, <span class="dt">by =</span> <span class="st">"fecha"</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb26-6" title="6"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">ipc_arg_b =</span> i_ipc9<span class="op">/</span>promedios_<span class="dv">59</span>_<span class="dv">72</span><span class="op">$</span>ipc_prom,</a>
-<a class="sourceLine" id="cb26-7" title="7">         <span class="dt">ipc_us_b =</span> i_ipc_us <span class="op">/</span><span class="st"> </span>promedios_<span class="dv">59</span>_<span class="dv">72</span><span class="op">$</span>cpi_prom,</a>
-<a class="sourceLine" id="cb26-8" title="8">         <span class="dt">ipt_arg_b =</span> i_productividad_arg <span class="op">/</span><span class="st"> </span>promedios_<span class="dv">59</span>_<span class="dv">72</span><span class="op">$</span>ipt_arg_prom,</a>
-<a class="sourceLine" id="cb26-9" title="9">         <span class="dt">ipt_us_b =</span> i_productividad_us <span class="op">/</span><span class="st"> </span>promedios_<span class="dv">59</span>_<span class="dv">72</span><span class="op">$</span>ipt_eeuu_prom,</a>
-<a class="sourceLine" id="cb26-10" title="10">         <span class="dt">tcp_arbitrario =</span> promedios_<span class="dv">59</span>_<span class="dv">72</span><span class="op">$</span>tcc_prom <span class="op">*</span><span class="st"> </span>((ipt_us_b <span class="op">/</span><span class="st"> </span>ipt_arg_b) <span class="op">*</span><span class="st"> </span>(ipc_arg_b <span class="op">/</span><span class="st"> </span>ipc_us_b)),</a>
-<a class="sourceLine" id="cb26-11" title="11">         <span class="dt">sobrevaluacion =</span> (tcp_arbitrario <span class="op">/</span><span class="st"> </span>tc_promedio_mes) <span class="op">/</span><span class="st"> </span>promedios_<span class="dv">59</span>_<span class="dv">72</span><span class="op">$</span>tcp_arb_tcc_prom,</a>
-<a class="sourceLine" id="cb26-12" title="12">         <span class="dt">tcp_definitivo =</span> sobrevaluacion <span class="op">*</span><span class="st"> </span>tc_promedio_mes) </a>
-<a class="sourceLine" id="cb26-13" title="13"></a>
-<a class="sourceLine" id="cb26-14" title="14">tcp  </a></code></pre></div>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb25-1" title="1">tcp &lt;-<span class="st"> </span>tc_mensual <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb25-2" title="2"><span class="st">  </span><span class="kw">left_join</span>(productividad_us, <span class="dt">by =</span> <span class="st">"fecha"</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb25-3" title="3"><span class="st">  </span><span class="kw">left_join</span>(ipc_us, <span class="dt">by =</span> <span class="st">"fecha"</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb25-4" title="4"><span class="st">  </span><span class="kw">left_join</span>(productividad_arg, <span class="dt">by =</span> <span class="st">"fecha"</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb25-5" title="5"><span class="st">  </span><span class="kw">left_join</span>(ipc_arg, <span class="dt">by =</span> <span class="st">"fecha"</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb25-6" title="6"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">ipc_arg_b =</span> i_ipc9<span class="op">/</span>promedios_<span class="dv">59</span>_<span class="dv">72</span><span class="op">$</span>ipc_prom,</a>
+<a class="sourceLine" id="cb25-7" title="7">         <span class="dt">ipc_us_b =</span> i_ipc_us <span class="op">/</span><span class="st"> </span>promedios_<span class="dv">59</span>_<span class="dv">72</span><span class="op">$</span>cpi_prom,</a>
+<a class="sourceLine" id="cb25-8" title="8">         <span class="dt">ipt_arg_b =</span> i_productividad_arg <span class="op">/</span><span class="st"> </span>promedios_<span class="dv">59</span>_<span class="dv">72</span><span class="op">$</span>ipt_arg_prom,</a>
+<a class="sourceLine" id="cb25-9" title="9">         <span class="dt">ipt_us_b =</span> i_productividad_us <span class="op">/</span><span class="st"> </span>promedios_<span class="dv">59</span>_<span class="dv">72</span><span class="op">$</span>ipt_eeuu_prom,</a>
+<a class="sourceLine" id="cb25-10" title="10">         <span class="dt">tcp_arbitrario =</span> promedios_<span class="dv">59</span>_<span class="dv">72</span><span class="op">$</span>tcc_prom <span class="op">*</span><span class="st"> </span>((ipt_us_b <span class="op">/</span><span class="st"> </span>ipt_arg_b) <span class="op">*</span><span class="st"> </span>(ipc_arg_b <span class="op">/</span><span class="st"> </span>ipc_us_b)),</a>
+<a class="sourceLine" id="cb25-11" title="11">         <span class="dt">sobrevaluacion =</span> (tcp_arbitrario <span class="op">/</span><span class="st"> </span>tc_promedio_mes) <span class="op">/</span><span class="st"> </span>promedios_<span class="dv">59</span>_<span class="dv">72</span><span class="op">$</span>tcp_arb_tcc_prom,</a>
+<a class="sourceLine" id="cb25-12" title="12">         <span class="dt">tcp_definitivo =</span> sobrevaluacion <span class="op">*</span><span class="st"> </span>tc_promedio_mes) </a>
+<a class="sourceLine" id="cb25-13" title="13"></a>
+<a class="sourceLine" id="cb25-14" title="14">tcp  </a></code></pre></div>
 <pre><code>## # A tibble: 213 x 13
 ##    fecha      tc_promedio_mes i_productividad… i_ipc_us i_productividad…
 ##    &lt;date&gt;               &lt;dbl&gt;            &lt;dbl&gt;    &lt;dbl&gt;            &lt;dbl&gt;
@@ -390,7 +385,7 @@
 ## # … with 203 more rows, and 8 more variables: i_ipc9 &lt;dbl&gt;,
 ## #   ipc_arg_b &lt;dbl&gt;, ipc_us_b &lt;dbl&gt;, ipt_arg_b &lt;dbl&gt;, ipt_us_b &lt;dbl&gt;,
 ## #   tcp_arbitrario &lt;dbl&gt;, sobrevaluacion &lt;dbl&gt;, tcp_definitivo &lt;dbl&gt;</code></pre>
-<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb28-1" title="1">tcp <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select</span>(fecha, tc_promedio_mes, tcp_arbitrario, sobrevaluacion, tcp_definitivo) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw"><a href="https://rdrr.io/r/stats/filter.html">filter</a></span>(fecha <span class="op">&gt;=</span><span class="st"> "2017-01-01"</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb27"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb27-1" title="1">tcp <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select</span>(fecha, tc_promedio_mes, tcp_arbitrario, sobrevaluacion, tcp_definitivo) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw"><a href="https://rdrr.io/r/stats/filter.html">filter</a></span>(fecha <span class="op">&gt;=</span><span class="st"> "2017-01-01"</span>)</a></code></pre></div>
 <pre><code>## # A tibble: 35 x 5
 ##    fecha      tc_promedio_mes tcp_arbitrario sobrevaluacion tcp_definitivo
 ##    &lt;date&gt;               &lt;dbl&gt;          &lt;dbl&gt;          &lt;dbl&gt;          &lt;dbl&gt;
@@ -401,28 +396,28 @@
 ##  5 2017-05-01            15.7           23.2           1.62           25.4
 ##  6 2017-06-01            16.1           24.0           1.63           26.2
 ##  7 2017-07-01            17.2           24.3           1.55           26.6
-##  8 2017-08-01            17.4           25.3           1.59           27.7
-##  9 2017-09-01            17.2           25.6           1.63           28.0
-## 10 2017-10-01            17.5           26.6           1.67           29.1
+##  8 2017-08-01            17.4           24.7           1.55           27.0
+##  9 2017-09-01            17.2           24.4           1.54           26.6
+## 10 2017-10-01            17.5           24.6           1.54           26.9
 ## # … with 25 more rows</code></pre>
-<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb30-1" title="1">g1 &lt;-<span class="st"> </span>tcp <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb30-2" title="2"><span class="st">  </span><span class="kw">gather</span>(variable, valor,tcp_arbitrario<span class="op">:</span>tcp_definitivo) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb30-3" title="3"><span class="st">  </span><span class="kw">ggplot</span>(<span class="kw">aes</span>(fecha,<span class="dt">y=</span>valor, <span class="dt">color=</span>variable)) <span class="op">+</span></a>
-<a class="sourceLine" id="cb30-4" title="4"><span class="st">  </span><span class="kw">geom_line</span>()<span class="op">+</span></a>
-<a class="sourceLine" id="cb30-5" title="5"><span class="st">  </span><span class="kw">theme</span>(<span class="dt">axis.text.y =</span> <span class="kw">element_blank</span>(),</a>
-<a class="sourceLine" id="cb30-6" title="6">        <span class="dt">legend.position =</span> <span class="st">'bottom'</span>)</a>
-<a class="sourceLine" id="cb30-7" title="7">  </a>
-<a class="sourceLine" id="cb30-8" title="8">g2 &lt;-<span class="st"> </span>tcp <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb30-9" title="9"><span class="st"> </span><span class="kw">ggplot</span>(<span class="kw">aes</span>(fecha,<span class="dt">y=</span>tc_promedio_mes)) <span class="op">+</span></a>
-<a class="sourceLine" id="cb30-10" title="10"><span class="st">  </span><span class="kw">geom_line</span>(<span class="dt">color=</span><span class="st">'darkgreen'</span>)</a>
-<a class="sourceLine" id="cb30-11" title="11"></a>
-<a class="sourceLine" id="cb30-12" title="12">g3 &lt;-<span class="st"> </span>tcp <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb30-13" title="13"><span class="st"> </span><span class="kw">ggplot</span>(<span class="kw">aes</span>(fecha,<span class="dt">y=</span>sobrevaluacion)) <span class="op">+</span></a>
-<a class="sourceLine" id="cb30-14" title="14"><span class="st">  </span><span class="kw">geom_line</span>(<span class="dt">color=</span><span class="st">'darkgreen'</span>)</a>
-<a class="sourceLine" id="cb30-15" title="15"></a>
-<a class="sourceLine" id="cb30-16" title="16">cowplot<span class="op">::</span><span class="kw"><a href="https://rdrr.io/pkg/cowplot/man/plot_grid.html">plot_grid</a></span>(g1,g2,<span class="dt">nrow =</span> <span class="dv">2</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb29"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb29-1" title="1">g1 &lt;-<span class="st"> </span>tcp <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb29-2" title="2"><span class="st">  </span><span class="kw">gather</span>(variable, valor,tcp_arbitrario<span class="op">:</span>tcp_definitivo) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb29-3" title="3"><span class="st">  </span><span class="kw">ggplot</span>(<span class="kw">aes</span>(fecha,<span class="dt">y=</span>valor, <span class="dt">color=</span>variable)) <span class="op">+</span></a>
+<a class="sourceLine" id="cb29-4" title="4"><span class="st">  </span><span class="kw">geom_line</span>()<span class="op">+</span></a>
+<a class="sourceLine" id="cb29-5" title="5"><span class="st">  </span><span class="kw">theme</span>(<span class="dt">axis.text.y =</span> <span class="kw">element_blank</span>(),</a>
+<a class="sourceLine" id="cb29-6" title="6">        <span class="dt">legend.position =</span> <span class="st">'bottom'</span>)</a>
+<a class="sourceLine" id="cb29-7" title="7">  </a>
+<a class="sourceLine" id="cb29-8" title="8">g2 &lt;-<span class="st"> </span>tcp <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb29-9" title="9"><span class="st"> </span><span class="kw">ggplot</span>(<span class="kw">aes</span>(fecha,<span class="dt">y=</span>tc_promedio_mes)) <span class="op">+</span></a>
+<a class="sourceLine" id="cb29-10" title="10"><span class="st">  </span><span class="kw">geom_line</span>(<span class="dt">color=</span><span class="st">'darkgreen'</span>)</a>
+<a class="sourceLine" id="cb29-11" title="11"></a>
+<a class="sourceLine" id="cb29-12" title="12">g3 &lt;-<span class="st"> </span>tcp <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb29-13" title="13"><span class="st"> </span><span class="kw">ggplot</span>(<span class="kw">aes</span>(fecha,<span class="dt">y=</span>sobrevaluacion)) <span class="op">+</span></a>
+<a class="sourceLine" id="cb29-14" title="14"><span class="st">  </span><span class="kw">geom_line</span>(<span class="dt">color=</span><span class="st">'darkgreen'</span>)</a>
+<a class="sourceLine" id="cb29-15" title="15"></a>
+<a class="sourceLine" id="cb29-16" title="16">cowplot<span class="op">::</span><span class="kw"><a href="https://rdrr.io/pkg/cowplot/man/plot_grid.html">plot_grid</a></span>(g1,g2,<span class="dt">nrow =</span> <span class="dv">2</span>)</a></code></pre></div>
 <pre><code>## Warning: Removed 168 rows containing missing values (geom_path).</code></pre>
-<p><img src="TCP_files/figure-html/unnamed-chunk-17-1.png" width="700"></p>
+<p><img src="TCP_files/figure-html/unnamed-chunk-16-1.png" width="700"></p>
 </div>
 </div>
   </div>

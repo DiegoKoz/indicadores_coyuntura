@@ -15,6 +15,8 @@ library(tidyverse)
 library(stringr)
 library(lubridate)
 library(imputeTS)
+library(devtools)
+load_all()
 ```
 
 # Variables de EEUU
@@ -57,16 +59,6 @@ Nota: todos los números indices (cuyas variables se identifican con el prefijo 
 
 #### Creación de fechas y cambio de base
 
-
-Creo una función para calcular números índice
-```{r}
-generar_indice <- function(serie,fecha, fecha_base){
-
-  valor_base <- serie[which(fecha==fecha_base)]
-  (serie/valor_base)
-  }
-
-```
 
 #### Empleo
 ```{r}
@@ -158,9 +150,10 @@ base_manuf_arg04 <- read_csv("../data/va_p_ctes_arg.csv")
 
 manuf_arg <- base_manuf_arg04 %>%
   select(fecha=indice_tiempo, industria_manufacturera_total) %>%
-  mutate(i_manuf_arg = generar_indice(serie = industria_manufacturera_total,
+  mutate(fecha = quarter(fecha,with_year = T),
+    i_manuf_arg = generar_indice(serie = industria_manufacturera_total,
                                     fecha = fecha,
-                                    fecha_base = "2017-01-01")) %>% 
+                                    fecha_base = "2017.1")) %>% 
   select(-industria_manufacturera_total)
 ```
 
@@ -173,32 +166,31 @@ empleo_nacional_serie_trimestral <- read_excel("../data/empleo_arg.xlsx",
           empleo_arg = "Industria") %>% 
   mutate(cuatri = as.double(str_sub(periodo, 1, 1)),
          anio = as.double(str_sub(periodo, 9, 13)),
-         mes = case_when(cuatri == 1 ~ 1,
-                         cuatri == 2 ~ 4,
-                         cuatri == 3 ~ 7,
-                         cuatri == 4 ~ 12),
-         fecha = as_date(parse_date_time(paste(anio, mes, sep = "-"), orders = "ym"))) %>% 
+         fecha = as.numeric(glue::glue('{anio}.{cuatri}'))) %>% 
   select(fecha, empleo_arg)
 
 empleo_arg <-  empleo_nacional_serie_trimestral %>% 
   mutate(i_empleo_arg = generar_indice(serie = empleo_arg,
                                     fecha = fecha,
-                                    fecha_base = "2017-01-01")) %>% 
+                                    fecha_base = "2017.1")) %>% 
   select(-empleo_arg) #buscar otra variable empleo, con mayor actualizacion (EPH por ej)
 empleo_arg
+
 ```
 
 ### Productividad
 
 ```{r}
 productividad_arg <- empleo_arg %>%
-  left_join(manuf_arg, by = "fecha") %>%
-  mutate(i_productividad_arg = i_manuf_arg/i_empleo_arg) %>% 
-  filter(fecha >= "2004-01-01") %>%  
+  full_join(manuf_arg, by = "fecha") %>%
+  mutate( #i_empleo_arg = imputeTS::na_locf(i_empleo_arg),
+    i_productividad_arg = i_manuf_arg/i_empleo_arg) %>% 
+  filter(!is.na(i_productividad_arg)) %>%  
   select(fecha, i_productividad_arg)
 
 #agrego todos los meses
 productividad_arg <- productividad_arg %>% 
+  mutate(fecha = lubridate::yq(fecha)) %>% 
   complete(fecha = seq.Date(min(fecha), max(fecha), by="month")) %>% 
   mutate(i_productividad_arg = na_interpolation(i_productividad_arg,option = 'linear')) #Revisar si se puede ajustar con el IPI industrial del INDEC o FIEL
 productividad_arg
