@@ -8,7 +8,6 @@ vignette: >
 ---
 
 
-
 ```{r message=FALSE, warning=FALSE}
 library(readr)
 library(readxl)
@@ -255,4 +254,23 @@ tcp <- tc_mensual %>%
 tcp  
 tcp %>% select(fecha, tc_promedio_mes, tcp_arbitrario, sobrevaluacion, tcp_definitivo) %>% filter(fecha >= "2017-01-01")
 
+```
+
+```{r}
+g1 <- tcp %>% 
+  gather(variable, valor,tcp_arbitrario:tcp_definitivo) %>% 
+  ggplot(aes(fecha,y=valor, color=variable)) +
+  geom_line()+
+  theme(axis.text.y = element_blank(),
+        legend.position = 'bottom')
+  
+g2 <- tcp %>% 
+ ggplot(aes(fecha,y=tc_promedio_mes)) +
+  geom_line(color='darkgreen')
+
+g3 <- tcp %>% 
+ ggplot(aes(fecha,y=sobrevaluacion)) +
+  geom_line(color='darkgreen')
+
+cowplot::plot_grid(g1,g2,nrow = 2)
 ```

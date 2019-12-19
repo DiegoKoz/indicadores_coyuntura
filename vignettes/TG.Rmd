@@ -7,7 +7,6 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-
 ```{r include=FALSE}
 library(tidyverse)
 library(readr)
@@ -144,3 +143,224 @@ stock_corp_cc  <- read_csv("../data/stock_current_cost.csv",
 stock_corp_cc      
   
 ```
+
+### Tasa de Ganancia de las Corporaciones
+
+```{r}
+rop <- stock_corp_hc %>%
+  left_join(corporate_profits_unificacion, by = "fecha") %>% 
+  left_join(stock_corp_cc, by = c("sector.x", "fecha")) %>% 
+  filter(sector.x == "Corporate",
+         sector.y == "Corporate") %>%
+  mutate(stock_hc_anio_ant = lag(stock_hc, k = 1),
+         stock_cc_anio_ant = lag(stock_cc, k = 1),
+          tg_hc = profit_corp / stock_hc_anio_ant * 100, 
+          tg_cc = profit_corp / stock_cc_anio_ant * 100 ) %>% 
+  select(fecha, stock_hc, stock_hc_anio_ant, stock_cc, stock_cc_anio_ant, 
+         profit_corp, tg_cc, tg_hc)
+rop
+
+#Gráficos
+
+# Tg de kliman
+g1 <- rop %>% 
+  ggplot(aes(fecha, tg_hc))+
+  geom_line()+ 
+  labs(title = "Tasa de ganancia con stock valuado a costos históricos",
+       subtitle = "Metodología utilizada por Kliman")+
+  geom_smooth(size = 1, linetype = 1, method = "lm", se = TRUE)+
+  theme(legend.position = 'none')+
+  theme_minimal()
+g1
+
+# comparación de tg's
+g2 <- rop %>% 
+    ggplot(aes(fecha, tg_cc, color = "tg_cc"))+
+    geom_line()+ 
+    geom_line(aes(fecha, tg_hc, color = "tg_hc"))+
+    scale_color_discrete(name = "Tasas de ganancia") + #como modificar este label?
+    labs(title = "Comparación de tasas de ganancia") +
+    theme_minimal()
+g2
+
+# ruta_arch <- "comparacion_tg.png"
+# png(ruta_arch)
+# plot(g2)
+# dev.off()
+
+# Resumen tg's
+rop %>% select(tg_cc, tg_hc) %>% summary(rop)
+
+```
+
+#### Tasa de Ganancia sector industrial y farms
+```{r}
+#problema para calcularla con el stock del año anterior
+rop_rama <- stock_corp_hc %>%
+  filter(sector %in% c("Private fixed assets", "Corporate", "Farms", "Manufacturing")) %>% 
+  left_join(corporate_profits_unificacion, by = c("fecha", "sector")) %>% 
+  group_by(fecha, sector) %>% 
+  summarise(tg_1 = profit_corp / stock_hc * 100)
+rop_rama
+
+```
+
+```{r}
+g2 <- rop_rama %>% 
+  filter(!is.na(tg_1)) %>% 
+  ggplot(aes(fecha, tg_1, color = sector)) + 
+  geom_line()
+g2
+```
+
+
+
+# Tasa de Ganancia del capital total
+
+### [Capital Adelantado]
+
+#### [*Stock de capital. Table 1.1. Current-Cost Net Stock of Fixed Assets and Consumer Durable Goods](https://apps.bea.gov/iTable/iTable.cfm?reqid=10&step=3&isuri=1&table_list=16)
+Billions of dollars; yearend estimates. Transformado a millones. 
+
+```{r}
+stock_total_cc <- read_csv("../data/stock_total_cc.csv", 
+    skip = 4) %>% 
+  select(-Line) %>%
+  rename(sector = X2) %>%
+  na.omit(stock_total_cc) %>%
+  gather(.,
+           key = fecha,
+         value = stock_cc,
+         2:95) %>%
+  mutate(stock_cc = stock_cc * 1000,
+         fecha = as.Date(parse_datetime(fecha, format = "%Y"))) %>% 
+  select(fecha, everything(.))
+stock_total_cc      
+```
+
+
+### Ganancia
+
+#### [Valor Agregado Neto (Table 1.9.5. Net Value Added by Sector)](https://apps.bea.gov/iTable/iTable.cfm?reqid=19&step=3&isuri=1&nipa_table_list=49&categories=survey)
+[Millions of dollars]
+
+ Legend/Footnotes
+1. Equals net domestic product excluding net value added of households and institutions and of general government.
+2. Equals net domestic business value added excluding net farm value added.
+3. Equals gross value added of nonprofit institutions excluding consumption of fixed capital on fixed assets owned and used by nonprofit instututions serving households.
+4. Equals compensation of general government employees. 
+
+```{r}
+net_va <- read_csv("../data/Net Value Added by Sector.csv", 
+    skip = 4) %>% 
+  select(-Line) %>%
+  rename(sector = X2) %>%
+  na.omit(net_va) %>%
+  gather(.,
+           key = fecha,
+         value = net_va_corr,
+         2:91) %>%
+  mutate(fecha = as.Date(parse_datetime(fecha, format = "%Y"))) %>% 
+  select(fecha, everything(.))
+net_va
+
+```
+
+#### Empleo[Table 6.8A. Persons Engaged in Production by Industry](https://apps.bea.gov/iTable/iTable.cfm?reqid=19&step=3&isuri=1&nipa_table_list=206&categories=survey)
+In Thousands
+
+Legend/Footnotes
+1. sector$Persons engaged in production: Equals the number of full-time equivalent employees plus the number of self-employed persons. Unpaid family workers are not included.
+
+```{r}
+# Carga de bases de distintos años
+
+persons_engaged_29_48 <- read_csv("../data/Persons Engaged in Production by Industry_29_48.csv", 
+    skip = 4) %>% 
+  select(-Line) %>%
+  rename(sector = X2) %>%
+  na.omit(persons_engaged_29_48) %>%
+  select(-"1948") %>% 
+  gather(.,
+           key = fecha,
+         value = employ,
+         2:20) %>%
+  mutate(fecha = as.Date(parse_datetime(fecha, format = "%Y")),
+         sector = gsub('[[:digit:]]+', '', sector),
+         employ = as.double(employ)) %>%  
+  select(fecha, everything(.))
+
+persons_engaged_48_87 <- read_csv("../data/Persons Engaged in Production by Industry_48_87.csv", 
+    skip = 4) %>% 
+  select(-Line) %>%
+  rename(sector = X2) %>%
+  na.omit(persons_engaged_48_87) %>%
+  select(- "1987") %>% 
+  gather(.,
+           key = fecha,
+         value = employ,
+         2:40) %>%
+  mutate(fecha = as.Date(parse_datetime(fecha, format = "%Y")),
+         sector = gsub('[[:digit:]]+', '', sector),
+         employ = as.double(employ))  %>% 
+  select(fecha, everything(.))
+
+persons_engaged_87_00 <- read_csv("../data/Persons Engaged in Production by Industry_87_00.csv", 
+    skip = 4) %>% 
+  select(-Line) %>%
+  rename(sector = X2) %>%
+  na.omit(persons_engaged_87_00) %>%
+  select(-c("1998","1999", "2000")) %>% 
+  gather(.,
+           key = fecha,
+         value = employ,
+         2:12) %>%
+  mutate(fecha = as.Date(parse_datetime(fecha, format = "%Y")),
+         sector = gsub('[[:digit:]]+', '', sector)) %>%  
+  select(fecha, everything(.))
+
+persons_engaged_98_18 <- read_csv("../data/Persons Engaged in Production by Industry_98_18.csv", 
+    skip = 4) %>% 
+  select(-Line) %>%
+  rename(sector = X2) %>%
+  na.omit(persons_engaged_98_18) %>%
+  gather(.,
+           key = fecha,
+         value = employ,
+         2:22) %>%
+  mutate(fecha = as.Date(parse_datetime(fecha, format = "%Y")),
+         sector = gsub('[[:digit:]]+', '', sector)) %>%  
+  select(fecha, everything(.))
+
+# Unificación de bases
+
+persons_engaged <- persons_engaged_29_48 %>% 
+  bind_rows(persons_engaged_48_87) %>% 
+  bind_rows(persons_engaged_87_00) %>% 
+  bind_rows(persons_engaged_98_18)
+
+unique(persons_engaged$sector) 
+
+```
+
+
+
+Table 6.6A. Wages and Salaries Per Full-Time Equivalent Employee by Industry
+
+https://apps.bea.gov/iTable/iTable.cfm?reqid=19&step=3&isuri=1&nipa_table_list=198&categories=survey
+
+
+Consumo intermedio
+
+Intermediate Inputs by Industry
+
+https://apps.bea.gov/iTable/iTable.cfm?reqid=51&step=51&isuri=1&table_list=20&series=a
+
+Rotación BEA
+https://theplanningmotivedotcom.files.wordpress.com/2019/05/academia-turnover-article-pdf.pdf (página 2)
+
+GO: Gross Output by Industry
+https://apps.bea.gov/iTable/iTable.cfm?reqid=51&step=51&isuri=1&table_list=15&series=a
+
+VA: https://apps.bea.gov/iTable/iTable.cfm?reqid=51&step=51&isuri=1&table_list=1&series=a
+
