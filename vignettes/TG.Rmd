@@ -1,0 +1,146 @@
+---
+title: "Tasa de Ganancia"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Tasa de Ganancia}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+```{r include=FALSE}
+library(tidyverse)
+library(readr)
+library(ggplot2)
+library(stringi)
+library(devtools)
+load_all() # para cargar nuestras funciones de R
+```
+
+# Tasa de Ganancia de las Grandes Empresas (Corporate)
+
+### [CPI]((https://beta.bls.gov/dataViewer/view/timeseries/CUSR0000SA0;jsessionid=993AA0F88EC37E868C7BE9DF51C773D6))
+
+
+```{r echo=TRUE}
+#función para índices
+
+cpi_anual <- read_csv("../data/cpi.csv") %>%
+  group_by(Year) %>% 
+  summarise(cpi = mean(Value)) %>% 
+  rename(fecha = Year) %>% 
+  mutate(cpi = generar_indice(serie = cpi,
+                              fecha = fecha,
+                              fecha_base = 2018))
+```
+
+### Ganancia
+
+Ganancia de las corporaciones antes de impuesto (GCAI). Tabla 6.17, A a D. Kliman toma la linea 1. 
+En millones de USD.
+
+Links a los distintos años: 
+
+* [1929 a 1947](https://apps.bea.gov/iTable/iTable.cfm?reqid=19&step=3&isuri=1&select_all_years=1&nipa_table_list=240&series=q&first_year=1929&scale=-99&last_year=1948&categories=survey&thetable=x)
+
+* [1948 a 1987](https://apps.bea.gov/iTable/iTable.cfm?reqid=19&step=3&isuri=1&select_all_years=1&nipa_table_list=241&series=q&first_year=1980&scale=-99&last_year=1987&categories=survey&thetable=x)
+
+* [1987 a 2000](https://apps.bea.gov/iTable/iTable.cfm?reqid=19&step=3&isuri=1&select_all_years=1&nipa_table_list=242&series=q&first_year=1993&scale=-99&last_year=2000&categories=survey&thetable=x)
+
+* [1998 a 2018](https://apps.bea.gov/iTable/iTable.cfm?reqid=19&step=3&isuri=1&select_all_years=1&nipa_table_list=243&series=q&first_year=2011&scale=-99&last_year=2018&categories=survey&thetable=x)
+
+
+```{r message=FALSE, warning=FALSE}
+corporate_profits_btaxes_1929_1948 <- read_csv("../data/Table 6.17A. Corporate Profits Before Tax by Industry_1929-1948.csv", skip = 4) %>% 
+  select(-Line) %>%
+  rename(sector = X2) %>%
+  na.omit(corporate_profits_btaxes_1929_1948)   
+  
+corporate_profits_btaxes_1948_1987 <- read_csv("../data/Table 6.17B. Corporate Profits Before Tax by Industry_1948-1987.csv", skip = 4) %>%
+  select(-Line, -"1948") %>%
+  rename(sector = X2) %>%
+  na.omit(corporate_profits_btaxes_1948_1987)
+
+corporate_profits_btaxes_1987_2000 <- read_csv("../data/Table 6.17C. Corporate Profits Before Tax by Industry_1987-2000.csv", skip = 4) %>%
+  select(-Line, -"1987") %>%
+  rename(sector = X2) %>%
+  na.omit(corporate_profits_btaxes_1987_2000)
+
+corporate_profits_btaxes_2000_2018 <- read_csv("../data/Table 6.17D. Corporate Profits Before Tax by Industry_2000-2018.csv", skip = 4) %>%
+  select(-Line, -"2000") %>%
+  rename(sector=X2) %>%
+  na.omit(corporate_profits_btaxes_2000_2018)
+
+
+#Unificación de bases
+corporate_profits_unificacion <- corporate_profits_btaxes_1929_1948 %>% 
+  left_join(corporate_profits_btaxes_1948_1987,by = "sector") %>% 
+  left_join(corporate_profits_btaxes_1987_2000,by = "sector") %>% 
+  left_join(corporate_profits_btaxes_2000_2018,by = "sector") %>% 
+  select(-"1998.y",-"1999.y") %>% 
+  gather(.,
+         key = fecha,
+         value = profit_corp,
+         2:91)  %>% 
+  mutate(profit_corp = as.double(profit_corp),  #por qué pasa esta conversion a chr?
+         fecha = as.Date(parse_datetime(fecha, format = "%Y")),
+         sector = case_when(sector == "Corporate profits before tax" ~ "Corporate",
+                            TRUE ~ sector))
+corporate_profits_unificacion
+
+rm(corporate_profits_btaxes_1929_1948, 
+   corporate_profits_btaxes_1948_1987,
+   corporate_profits_btaxes_1987_2000,
+   corporate_profits_btaxes_2000_2018)
+
+```
+
+### [Capital Adelantado](https://apps.bea.gov/iTable/iTable.cfm?reqid=10&step=3&isuri=1&table_list=49&series=q&first_year=2011&allyears=1&tabledisplay=&scale=-99&last_year=2018) 
+
+#### Costos Históricos
+
+##### Stock utilizado por [Kliman](http://www.revistaryr.org.ar/index.php/RyR/article/view/87/87)
+
+Stock Neto de los activos privados fijos de las corporaciones a precios históricos.
+Tabla 6.3. Kliman toma la línea 2, es decir, el stock de las Corporate unicamente.
+Organizada por industria y por forma legal. Serie de 1929 a 2018. 
+Originalmente en billones de USD (modificada a millones).
+
+```{r message=FALSE, warning=FALSE}
+stock_corp_hc <- read_csv("../data/Table 6.3. Historical-Cost Net Stock of Private Fixed Assets by Industry Group and Legal Form of Organization.csv", skip = 4) %>%
+  select(-Line) %>%
+  rename(sector = X2) %>%
+  na.omit(stock_corp_hc) %>%
+  gather(.,
+           key = fecha,
+         value = stock,
+         2:95) %>%
+  mutate(stock_hc = stock * 1000,
+         fecha = as.Date(parse_datetime(fecha, format = "%Y"))) %>% 
+  select(fecha, everything(.), -stock)
+stock_corp_hc      
+    
+```
+
+#### [Costos corrientes](https://apps.bea.gov/iTable/iTable.cfm?reqid=10&step=3&isuri=1&table_list=49&series=q&first_year=2011&allyears=1&tabledisplay=&scale=-99&last_year=2018)
+
+Stock Neto de los activos privados fijos de las corporaciones a precios corrientes (Tabla 6.1).
+Mismas características que la serie a precios históricos.
+
+```{r}
+stock_corp_cc  <- read_csv("../data/stock_current_cost.csv", 
+    skip = 4) %>% 
+  select(-Line) %>%
+  rename(sector = X2) %>%
+  na.omit(stock_corp_hc) %>%
+  gather(.,
+           key = fecha,
+         value = stock,
+         2:95) %>%
+  mutate(stock = stock * 1000,
+         fecha = as.Date(parse_datetime(fecha, format = "%Y"))) %>% 
+  select(fecha, everything(.)) %>% 
+  rename(sector.x = sector, stock_cc = stock)
+stock_corp_cc      
+  
+```
