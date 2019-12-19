@@ -13,7 +13,7 @@ https://cran.r-project.org/web/packages/fredr/vignettes/fredr.html
 
 ```{r}
 
-devtools::install_github("sboysel/fredr") ## UNA SOLA VEZ
+#devtools::install_github("sboysel/fredr") ## UNA SOLA VEZ
 library(fredr)
 ```
 

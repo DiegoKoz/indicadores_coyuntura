@@ -13,7 +13,7 @@ library(tidyverse)
 ```
 
 ```{r}
-beaKey 	<- read_file('fuentes/bea_apikey.txt')
+beaKey 	<- read_file('../data/bea_apikey.txt')
 ```
 
 ```{r}
