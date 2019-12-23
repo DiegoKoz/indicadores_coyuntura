@@ -219,7 +219,7 @@ productividad_arg
 
 ## Índice de precios al consumidor
 
-Estimación propia (excel "TCP_v2)
+Estimación propia: IPC 9 Prov ajustado con IPC CABA (excel "TCP_v2)
 ```{r}
 ipc_arg <- read_excel("../data/ipc_arg.xlsx", 
     col_types = c("date", "numeric", "numeric")) %>% 
@@ -236,8 +236,13 @@ ipc_indec_arg <- read.csv("../data/indice-precios-al-consumidor-nivel-general-ba
   mutate(fecha = as.Date(fecha),
          i_indec = generar_indice(serie = i_indec,
                                   fecha = fecha,
-                                  fecha_base = "2017-01-01"))
-
+                                  fecha_base = "2017-01-01")) %>% 
+  full_join(ipc_arg, by = "fecha") %>% 
+  arrange(fecha) %>% 
+  mutate(ipc9_var = cambio_porcentual(i_ipc9),
+         i_indec = case_when(is.na(i_indec)  ~ lag(i_indec) + lag(i_indec) * ipc9_var,
+                             TRUE ~ i_indec))
+ipc_indec_arg
 ```
 
 [IPCBA. Evolución del Nivel General, de los bienes y de los servicios. Índices y variaciones porcentuales respecto del mes anterior. Ciudad de Buenos Aires. Julio de 2012 / noviembre de 2019](https://www.estadisticaciudad.gob.ar/eyc/?p=27386)
@@ -277,7 +282,7 @@ promedios_59_72 <- read_csv("../data/promedios_59_72.txt") %>% spread(variable,v
 # options (scipen = 999)
 ```
 
-## TCP 
+## TCP mensual
 
 ```{r}
 # Estimación con IPC propio (9 Prov ajustado con IPC CABA)
@@ -316,8 +321,6 @@ tcp_2 <- tc_mensual %>%
          sobrevaluacion = (tcp_arbitrario / tc_promedio_mes) / promedios_59_72$tcp_arb_tcc_prom,
          tcp_definitivo = sobrevaluacion * tc_promedio_mes) 
 
-tcp_2  
-
 tcp_2 %>% 
   # select(fecha, tc_promedio_mes, tcp_arbitrario, sobrevaluacion, tcp_definitivo) %>% 
   filter(fecha >= "2017-01-01")
@@ -326,6 +329,22 @@ write.csv(x = tcp_2, file = "tcp.csv")
 
 ```
 
+## TCP anual
+```{r}
+tcp_anual <- tcp_2 %>% 
+#   mutate(year = as.Date(year(fecha)))
+# parse_date_time(paste(Year, mes, sep = ""), orders = "ym"
+  group_by(fecha = floor_date(fecha, "year")) %>% 
+  summarise(tcc = mean(tc_promedio_mes),
+            tcp_arbitrario = mean(tcp_arbitrario, na.rm = T),
+            sobrevaluacion = mean(sobrevaluacion, na.rm = T),
+            tcp_definitivo = mean(tcp_definitivo,  na.rm = T))
+tcp_anual
+    
+write.csv(x = tcp_anual, file = "tcp_anual.csv")
+
+```
+ 
 
 ```{r}
 g1 <- tcp_2 %>% 
