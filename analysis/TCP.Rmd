@@ -269,12 +269,24 @@ ipc_caba_arg <- read_excel("../data/Evol_gral_bs_svcios.xlsx",
 tc_dia_bcra <- read_excel("../data/com3500.xls", 
                 skip = 2) %>% 
   select(fecha = Fecha,
-         tc = "Tipo de Cambio de Referencia - en Pesos - por Dólar")
+         tc = "Tipo de Cambio de Referencia - en Pesos - por Dólar") %>% 
+  mutate(fecha = date(fecha))
       
 tc_mensual <- tc_dia_bcra %>%
  group_by(fecha = floor_date(fecha, "month")) %>% 
-  summarise(tc_promedio_mes = mean(tc)) %>% 
-  mutate(fecha = date(fecha)) #armar una nueva variable con TC a fin de mes
+  summarise(tc_promedio_mes = mean(tc))
+
+
+#armar una nueva variable con TC a fin de mes
+tc_mensual_b <- tc_dia_bcra %>% 
+  mutate(anio = year(fecha),
+        mes = month(fecha),
+        dia = day(fecha)) %>% 
+  group_by(anio, mes) %>%
+  summarise(dia = as.double(max(dia))) %>% 
+  # mutate(fecha_buscada = ymd(paste(c("anio", "mes", "dia"), sep = "")))
+  mutate(fecha_buscada = parse_date_time(paste0(anio, mes, dia), orders = "ymd"))
+tc_mensual_b
 
 #promedios 59-72
 promedios_59_72 <- read_csv("../data/promedios_59_72.txt") %>% spread(variable,valor)
