@@ -12,7 +12,12 @@ library(tidyverse)
 library(stringr)
 library(lubridate)
 library(imputeTS)
+library(devtools)
 load_all()
+
+#función de cambio porcentual
+cambio_porcentual <- function(x) {x/lag(x) - 1}
+
 ```
 
 # Variables de EEUU
@@ -87,14 +92,9 @@ productividad_us <- employ_us %>%
   left_join(manuf_us, by = "fecha") %>%
   mutate(i_productividad_us = i_manuf_us/i_empleo_us) %>% 
   select(fecha, i_productividad_us) %>% 
-  filter(fecha >= "1972-01-01")
-
-
-productividad_us <- productividad_us %>% 
-#agrego todos los meses
-  complete(fecha = seq.Date(min(fecha), max(fecha), by="month")) %>% 
-#imputo
-  mutate(i_productividad_us = na_interpolation(i_productividad_us,option = 'linear'))
+  filter(fecha >= "1972-01-01") %>%
+  complete(fecha = seq.Date(min(fecha), max(fecha), by="month")) %>% #agrego todos los meses
+  mutate(i_productividad_us = na_interpolation(i_productividad_us, option = 'linear')) #imputo
 
 ```
 
@@ -143,10 +143,26 @@ ipc_us <- base_ipc_us %>%
 
 ```{r}
 base_manuf_arg04 <- read_csv("../data/va_p_ctes_arg.csv")
+```
 
+#### [Índice de Producción Industrial Manufacturero (IPI). Nivel General, series original y desestacionalizada. Base 2004.](https://datos.gob.ar/dataset/sspm-indice-produccion-industrial-manufacturero-ipi/archivo/sspm_453.1)
+Índice de Producción Industrial Manufacturero (IPI). Nivel General, series original y desestacionalizada
+
+Nos quedamos unicamente con las variaciones porcentuales, para luego aplicarlas a la base del valor agregado.
+
+```{r}
+ipi_manuf <- read.csv("../data/ipi-manufacturero.csv") %>% 
+  select(indice_tiempo, ipi_desesta = serie_desestacionalizada) %>%
+  mutate(fecha = as.Date(indice_tiempo),
+         ipi_variacion = cambio_porcentual(ipi_desesta)) %>% 
+  select(-c(ipi_desesta, indice_tiempo))
+```
+
+
+```{r}
 manuf_arg <- base_manuf_arg04 %>%
-  select(fecha=indice_tiempo, industria_manufacturera_total) %>%
-  mutate(fecha = quarter(fecha,with_year = T),
+  select(fecha = indice_tiempo, industria_manufacturera_total) %>%
+  mutate(fecha = quarter(fecha, with_year = T),
     i_manuf_arg = generar_indice(serie = industria_manufacturera_total,
                                     fecha = fecha,
                                     fecha_base = "2017.1")) %>% 
@@ -157,15 +173,17 @@ manuf_arg <- base_manuf_arg04 %>%
 
 ```{r}
 empleo_nacional_serie_trimestral <- read_excel("../data/empleo_arg.xlsx", 
-                                               sheet = "C2.2", skip = 2, n_max = 93) %>% 
+                                               sheet = "C2.2", skip = 2, n_max = 93)
+```
+
+```{r}
+empleo_arg <-  empleo_nacional_serie_trimestral %>% 
   rename( periodo = "Período",
           empleo_arg = "Industria") %>% 
   mutate(cuatri = as.double(str_sub(periodo, 1, 1)),
          anio = as.double(str_sub(periodo, 9, 13)),
          fecha = as.numeric(glue::glue('{anio}.{cuatri}'))) %>% 
-  select(fecha, empleo_arg)
-
-empleo_arg <-  empleo_nacional_serie_trimestral %>% 
+  select(fecha, empleo_arg) %>% 
   mutate(i_empleo_arg = generar_indice(serie = empleo_arg,
                                     fecha = fecha,
                                     fecha_base = "2017.1")) %>% 
@@ -179,28 +197,64 @@ empleo_arg
 ```{r}
 productividad_arg <- empleo_arg %>%
   full_join(manuf_arg, by = "fecha") %>%
-  mutate( #i_empleo_arg = imputeTS::na_locf(i_empleo_arg),
-    i_productividad_arg = i_manuf_arg/i_empleo_arg) %>% 
-  filter(!is.na(i_productividad_arg)) %>%  
-  select(fecha, i_productividad_arg)
-
-#agrego todos los meses
-productividad_arg <- productividad_arg %>% 
   mutate(fecha = lubridate::yq(fecha)) %>% 
-  complete(fecha = seq.Date(min(fecha), max(fecha), by="month")) %>% 
-  mutate(i_productividad_arg = na_interpolation(i_productividad_arg,option = 'linear')) #Revisar si se puede ajustar con el IPI industrial del INDEC o FIEL
+  complete(fecha = seq.Date(min(fecha), max(fecha), by = "month")) %>% #agrego todos los meses
+  full_join(ipi_manuf, by = "fecha") %>% 
+  mutate(i_manuf_arg = case_when(
+            is.na(i_manuf_arg)  ~ lag(i_manuf_arg) + lag(i_manuf_arg) * ipi_variacion,
+            TRUE ~ i_manuf_arg),
+         i_manuf_arg = case_when(
+            is.na(i_manuf_arg)  ~ lag(i_manuf_arg) + lag(i_manuf_arg) * ipi_variacion,
+            TRUE ~ i_manuf_arg), #Si saco  esta repitición del código no me calcula un valor
+         i_manuf_arg = if(fecha >= "2019-07-01") {lag(i_manuf_arg) + lag(i_manuf_arg) * ipi_variacion}
+                          else{na_interpolation(i_manuf_arg, option = 'linear')}, #no funciona el ajuste con IPI
+         i_empleo_arg = na_interpolation(i_empleo_arg, option = 'linear'),
+        #i_empleo_arg = imputeTS::na_locf(i_empleo_arg),
+         i_productividad_arg = i_manuf_arg/i_empleo_arg) %>% 
+  filter(fecha >= "2004-01-01") %>% 
+  select(fecha, i_productividad_arg)
 productividad_arg
 
 ```
 
 ## Índice de precios al consumidor
 
+Estimación propia (excel "TCP_v2)
 ```{r}
 ipc_arg <- read_excel("../data/ipc_arg.xlsx", 
     col_types = c("date", "numeric", "numeric")) %>% 
   select(-ipc9_ene06) %>% 
   mutate(fecha = as.Date(fecha)) %>% 
   rename(i_ipc9 = ipc9_17) #Revisar si se puede construir el ipc con las bases crudas 
+```
+
+[INDEC. Índice de Precios al Consumidor. Nivel General. Base diciembre 2016. Valores mensuales](https://datos.gob.ar/dataset/sspm-indice-precios-al-consumidor-nacional-ipc-base-diciembre-2016/archivo/sspm_145.3)
+
+```{r}
+ipc_indec_arg <- read.csv("../data/indice-precios-al-consumidor-nivel-general-base-diciembre-2016-mensual.csv") %>% 
+  select(fecha = indice_tiempo, i_indec = ipc_ng_nacional) %>% 
+  mutate(fecha = as.Date(fecha),
+         i_indec = generar_indice(serie = i_indec,
+                                  fecha = fecha,
+                                  fecha_base = "2017-01-01"))
+
+```
+
+[IPCBA. Evolución del Nivel General, de los bienes y de los servicios. Índices y variaciones porcentuales respecto del mes anterior. Ciudad de Buenos Aires. Julio de 2012 / noviembre de 2019](https://www.estadisticaciudad.gob.ar/eyc/?p=27386)
+
+Hay que modificar la primera fila del excel (eliminar celdas combinadas) para cargarlo bien
+
+```{r}
+ipc_caba_arg <- read_excel("../data/Evol_gral_bs_svcios.xlsx", 
+    col_types = c("date", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric"), skip = 3) %>% 
+  select(fecha = "...1", i_caba = "Nivel General...2") %>% 
+  mutate(fecha = as.Date(fecha),
+         i_caba = generar_indice(serie = i_caba,
+                                 fecha = fecha,
+                                 fecha_base = "2017-01-01" )) %>% 
+  filter(!is.na(fecha)) #pierdo último valor
 ```
 
 
@@ -213,9 +267,9 @@ tc_dia_bcra <- read_excel("../data/com3500.xls",
          tc = "Tipo de Cambio de Referencia - en Pesos - por Dólar")
       
 tc_mensual <- tc_dia_bcra %>%
- group_by(fecha=floor_date(fecha, "month")) %>% 
+ group_by(fecha = floor_date(fecha, "month")) %>% 
   summarise(tc_promedio_mes = mean(tc)) %>% 
-  mutate(fecha=date(fecha)) #armar una nueva variable con TC a fin de mes
+  mutate(fecha = date(fecha)) #armar una nueva variable con TC a fin de mes
 
 #promedios 59-72
 promedios_59_72 <- read_csv("../data/promedios_59_72.txt") %>% spread(variable,valor)
@@ -226,7 +280,8 @@ promedios_59_72 <- read_csv("../data/promedios_59_72.txt") %>% spread(variable,v
 ## TCP 
 
 ```{r}
-tcp <- tc_mensual %>% 
+# Estimación con IPC propio (9 Prov ajustado con IPC CABA)
+tcp_1 <- tc_mensual %>% 
   left_join(productividad_us, by = "fecha") %>% 
   left_join(ipc_us, by = "fecha") %>% 
   left_join(productividad_arg, by = "fecha") %>% 
@@ -239,24 +294,52 @@ tcp <- tc_mensual %>%
          sobrevaluacion = (tcp_arbitrario / tc_promedio_mes) / promedios_59_72$tcp_arb_tcc_prom,
          tcp_definitivo = sobrevaluacion * tc_promedio_mes) 
 
-tcp  
-tcp %>% select(fecha, tc_promedio_mes, tcp_arbitrario, sobrevaluacion, tcp_definitivo) %>% filter(fecha >= "2017-01-01")
+tcp_1  
+tcp_1 %>% 
+  select(fecha, tc_promedio_mes, tcp_arbitrario, sobrevaluacion, tcp_definitivo) %>% 
+  filter(fecha >= "2017-01-01")
 
 ```
 
 ```{r}
-g1 <- tcp %>% 
+# Estimación con IPC CABA
+tcp_2 <- tc_mensual %>% 
+  left_join(productividad_us, by = "fecha") %>% 
+  left_join(ipc_us, by = "fecha") %>% 
+  left_join(productividad_arg, by = "fecha") %>% 
+  left_join(ipc_caba_arg, by = "fecha") %>% 
+  mutate(ipc_arg_b = i_caba/promedios_59_72$ipc_prom,
+         ipc_us_b = i_ipc_us / promedios_59_72$cpi_prom,
+         ipt_arg_b = i_productividad_arg / promedios_59_72$ipt_arg_prom,
+         ipt_us_b = i_productividad_us / promedios_59_72$ipt_eeuu_prom,
+         tcp_arbitrario = promedios_59_72$tcc_prom * ((ipt_us_b / ipt_arg_b) * (ipc_arg_b / ipc_us_b)),
+         sobrevaluacion = (tcp_arbitrario / tc_promedio_mes) / promedios_59_72$tcp_arb_tcc_prom,
+         tcp_definitivo = sobrevaluacion * tc_promedio_mes) 
+
+tcp_2  
+
+tcp_2 %>% 
+  # select(fecha, tc_promedio_mes, tcp_arbitrario, sobrevaluacion, tcp_definitivo) %>% 
+  filter(fecha >= "2017-01-01")
+
+write.csv(x = tcp_2, file = "tcp.csv")
+
+```
+
+
+```{r}
+g1 <- tcp_2 %>% 
   gather(variable, valor,tcp_arbitrario:tcp_definitivo) %>% 
   ggplot(aes(fecha,y=valor, color=variable)) +
   geom_line()+
   theme(axis.text.y = element_blank(),
         legend.position = 'bottom')
   
-g2 <- tcp %>% 
+g2 <- tcp_2 %>% 
  ggplot(aes(fecha,y=tc_promedio_mes)) +
   geom_line(color='darkgreen')
 
-g3 <- tcp %>% 
+g3 <- tcp_2 %>% 
  ggplot(aes(fecha,y=sobrevaluacion)) +
   geom_line(color='darkgreen')
 
