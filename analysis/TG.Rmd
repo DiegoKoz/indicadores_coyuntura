@@ -23,7 +23,6 @@ load_all() # para cargar nuestras funciones de R
 
 
 ```{r echo=TRUE}
-#función para índices
 
 cpi_anual <- read_csv("../data/cpi.csv") %>%
   group_by(Year) %>% 

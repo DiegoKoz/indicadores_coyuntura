@@ -145,6 +145,18 @@ ipc_us <- base_ipc_us %>%
 base_manuf_arg04 <- read_csv("../data/va_p_ctes_arg.csv")
 ```
 
+#### EMAE
+```{r}
+emae_sec <- read.csv("../data/emae-apertura-por-sectores-valores-mensuales-indice-base-2004.csv")
+
+emae_tot <- read.csv("../data/emae-valores-anuales-indice-base-2004-mensual.csv") %>% 
+  mutate(fecha = as.Date(indice_tiempo),
+         emae_deses_variacion = cambio_porcentual(emae_desestacionalizada)) %>% 
+  select(fecha, emae_deses_variacion)
+
+```
+
+
 #### [Índice de Producción Industrial Manufacturero (IPI). Nivel General, series original y desestacionalizada. Base 2004.](https://datos.gob.ar/dataset/sspm-indice-produccion-industrial-manufacturero-ipi/archivo/sspm_453.1)
 Índice de Producción Industrial Manufacturero (IPI). Nivel General, series original y desestacionalizada
 
@@ -195,25 +207,42 @@ empleo_arg
 ### Productividad
 
 ```{r}
+
 productividad_arg <- empleo_arg %>%
   full_join(manuf_arg, by = "fecha") %>%
   mutate(fecha = lubridate::yq(fecha)) %>% 
   complete(fecha = seq.Date(min(fecha), max(fecha), by = "month")) %>% #agrego todos los meses
-  full_join(ipi_manuf, by = "fecha") %>% 
-  mutate(i_manuf_arg = case_when(
+  full_join(ipi_manuf, by = "fecha") %>%  
+  left_join(emae_tot, by = "fecha") %>% 
+  filter(fecha >= "2004-01-01") %>%  
+  mutate(i_empleo_arg = na_interpolation(i_empleo_arg, option = 'linear'),
+         i_empleo_arg = imputeTS::na_locf(i_empleo_arg),
+         i_manuf_arg_2 = case_when(
             is.na(i_manuf_arg)  ~ lag(i_manuf_arg) + lag(i_manuf_arg) * ipi_variacion,
             TRUE ~ i_manuf_arg),
-         i_manuf_arg = case_when(
-            is.na(i_manuf_arg)  ~ lag(i_manuf_arg) + lag(i_manuf_arg) * ipi_variacion,
-            TRUE ~ i_manuf_arg), #Si saco  esta repitición del código no me calcula un valor
-         i_manuf_arg = if(fecha >= "2019-07-01") {lag(i_manuf_arg) + lag(i_manuf_arg) * ipi_variacion}
-                          else{na_interpolation(i_manuf_arg, option = 'linear')}, #no funciona el ajuste con IPI
-         i_empleo_arg = na_interpolation(i_empleo_arg, option = 'linear'),
-        #i_empleo_arg = imputeTS::na_locf(i_empleo_arg),
-         i_productividad_arg = i_manuf_arg/i_empleo_arg) %>% 
-  filter(fecha >= "2004-01-01") %>% 
-  select(fecha, i_productividad_arg)
+         i_manuf_arg_3 = case_when(
+            is.na(i_manuf_arg_2)  ~ lag(i_manuf_arg_2) + lag(i_manuf_arg_2) * ipi_variacion,
+            TRUE ~ i_manuf_arg_2),
+         i_manuf_arg_4 = case_when(
+           is.na(i_manuf_arg_3)  ~ lag(i_manuf_arg_3) + lag(i_manuf_arg_3) * emae_deses_variacion,
+            TRUE ~ i_manuf_arg_3),
+         i_manuf_arg_5 = case_when(
+           is.na(i_manuf_arg_4)  ~ lag(i_manuf_arg_4) + lag(i_manuf_arg_4) * emae_deses_variacion,
+            TRUE ~ i_manuf_arg_4),
+         i_productividad_arg = i_manuf_arg_5/i_empleo_arg) %>% 
+  select(fecha, i_empleo_arg, i_manuf_arg_5, i_productividad_arg) %>% 
+  rename(i_manuf_arg = i_manuf_arg_5)  
 productividad_arg
+
+
+#             TRUE ~ i_manuf_arg), #Si saco  esta repitición del código no me calcula un valor
+#          i_manuf_arg = if(fecha >= "2019-07-01") {lag(i_manuf_arg) + lag(i_manuf_arg) * ipi_variacion}
+#                           else{na_interpolation(i_manuf_arg, option = 'linear')}, #no funciona el ajuste con IPI
+#          i_empleo_arg = na_interpolation(i_empleo_arg, option = 'linear'),
+        # i_empleo_arg = imputeTS::na_locf(i_empleo_arg),
+         # i_productividad_arg = i_manuf_arg/i_empleo_arg) %>%
+  
+  # select(fecha, i_productividad_arg)
 
 ```
 
@@ -285,7 +314,7 @@ tc_mensual_b <- tc_dia_bcra %>%
   group_by(anio, mes) %>%
   summarise(dia = as.double(max(dia))) %>% 
   # mutate(fecha_buscada = ymd(paste(c("anio", "mes", "dia"), sep = "")))
-  mutate(fecha_buscada = parse_date_time(paste0(anio, mes, dia), orders = "ymd"))
+  mutate(fecha_buscada = parse_date_time(paste0(anio, mes, dia), order = "ymd"))
 tc_mensual_b
 
 #promedios 59-72
